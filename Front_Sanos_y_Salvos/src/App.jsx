@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Topbar from "./components/Topbar";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -10,10 +10,32 @@ import Reportes from "./pages/Reportes";
 function App() {
   const [pagina, setPagina] = useState("inicio");
 
+  useEffect(() => {
+    const elementos = document.querySelectorAll(".reveal");
+
+    const mostrarElemento = () => {
+      elementos.forEach((elemento) => {
+        const posicion = elemento.getBoundingClientRect().top;
+        const altoPantalla = window.innerHeight;
+
+        if (posicion < altoPantalla - 80) {
+          elemento.classList.add("reveal-visible");
+        }
+      });
+    };
+
+    mostrarElemento();
+    window.addEventListener("scroll", mostrarElemento);
+
+    return () => {
+      window.removeEventListener("scroll", mostrarElemento);
+    };
+  }, [pagina]);
+
   return (
     <>
       <Topbar />
-      <Navbar setPagina={setPagina} />
+      <Navbar setPagina={setPagina} pagina={pagina} />
 
       <main>
         {pagina === "inicio" && <Inicio setPagina={setPagina} />}

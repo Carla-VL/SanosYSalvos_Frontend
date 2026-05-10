@@ -38,7 +38,7 @@ function Reportar() {
   }
 
   return (
-    <section className="container py-5">
+    <section className="container py-5 reveal">
       <div className="text-center mb-5 seccion-encabezado">
         <p className="text-success fw-bold">Nuevo reporte</p>
         <h1>Reportar mascota</h1>

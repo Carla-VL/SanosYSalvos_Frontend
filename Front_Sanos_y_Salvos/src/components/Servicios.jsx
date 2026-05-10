@@ -1,6 +1,6 @@
 function Servicios({ setPagina }) {
   return (
-    <section className="container py-5">
+   <section className="container py-5 reveal">
       <div className="text-center mb-4">
         <p className="text-success fw-bold">Funciones principales</p>
         <h2>¿Cómo ayuda Sanos y Salvos?</h2>

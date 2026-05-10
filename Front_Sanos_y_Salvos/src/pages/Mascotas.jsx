@@ -35,7 +35,7 @@ function Mascotas() {
   ];
 
   return (
-    <section className="container py-5">
+    <section className="container py-5 reveal">
       <div className="text-center mb-5 seccion-encabezado">
         <p className="text-success fw-bold">Mascotas</p>
         <h1>Mascotas registradas</h1>

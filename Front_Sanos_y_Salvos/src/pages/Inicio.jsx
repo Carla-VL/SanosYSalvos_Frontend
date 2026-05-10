@@ -6,7 +6,7 @@ function Inicio({ setPagina }) {
     <>
       <Carrusel setPagina={setPagina} />
 
-      <section className="container py-5">
+      <section className="container py-5 reveal">
         <div className="row align-items-center">
           <div className="col-md-6">
             <img
