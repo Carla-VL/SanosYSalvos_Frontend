@@ -1,22 +1,23 @@
 function Servicios({ setPagina }) {
   return (
-   <section className="container py-5 reveal">
-      <div className="text-center mb-4">
-        <p className="text-success fw-bold">Funciones principales</p>
-        <h2>¿Cómo ayuda Sanos y Salvos?</h2>
+    <section className="servicios-section reveal">
+      <div className="container">
+        <div className="text-center mb-5">
+          <p className="text-success fw-bold">Funciones principales</p>
+          <h2>¿Cómo ayuda Sanos y Salvos?</h2>
 
-        <p>
-          La plataforma permite reportar, buscar y colaborar en la recuperación
-          de mascotas perdidas.
-        </p>
-      </div>
+          <p>
+            La plataforma permite reportar, buscar y colaborar en la recuperación
+            de mascotas perdidas.
+          </p>
+        </div>
 
-      <div className="row g-4">
-        <div className="col-md-4">
-          <div className="card h-100 shadow-sm border-0 text-center">
-            <div className="card-body">
-              <h1>🐶</h1>
-              <h5 className="text-success">Reportar mascota</h5>
+        <div className="row g-4">
+          <div className="col-md-4">
+            <div className="servicio-card">
+              <div className="servicio-icono">🐶</div>
+
+              <h4>Reportar mascota</h4>
 
               <p>
                 Permite registrar una mascota perdida o encontrada con datos
@@ -24,20 +25,19 @@ function Servicios({ setPagina }) {
               </p>
 
               <button
-                className="btn btn-outline-success btn-sm"
+                className="servicio-boton"
                 onClick={() => setPagina("reportar")}
               >
-                Ir a reportar
+                →
               </button>
             </div>
           </div>
-        </div>
 
-        <div className="col-md-4">
-          <div className="card h-100 shadow-sm border-0 text-center">
-            <div className="card-body">
-              <h1>🔎</h1>
-              <h5 className="text-success">Buscar mascotas</h5>
+          <div className="col-md-4">
+            <div className="servicio-card">
+              <div className="servicio-icono">🔎</div>
+
+              <h4>Buscar mascotas</h4>
 
               <p>
                 Ayuda a revisar mascotas registradas y reportes disponibles en
@@ -45,20 +45,19 @@ function Servicios({ setPagina }) {
               </p>
 
               <button
-                className="btn btn-outline-success btn-sm"
+                className="servicio-boton"
                 onClick={() => setPagina("mascotas")}
               >
-                Ver mascotas
+                →
               </button>
             </div>
           </div>
-        </div>
 
-        <div className="col-md-4">
-          <div className="card h-100 shadow-sm border-0 text-center">
-            <div className="card-body">
-              <h1>🤝</h1>
-              <h5 className="text-success">Colaborar</h5>
+          <div className="col-md-4">
+            <div className="servicio-card">
+              <div className="servicio-icono">🤝</div>
+
+              <h4>Colaborar</h4>
 
               <p>
                 Facilita la colaboración entre ciudadanos, refugios, clínicas
@@ -66,10 +65,10 @@ function Servicios({ setPagina }) {
               </p>
 
               <button
-                className="btn btn-outline-success btn-sm"
+                className="servicio-boton"
                 onClick={() => setPagina("reportes")}
               >
-                Ver reportes
+                →
               </button>
             </div>
           </div>

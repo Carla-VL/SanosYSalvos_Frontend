@@ -1,21 +1,22 @@
 function Navbar({ setPagina, pagina }) {
   function claseBoton(nombrePagina) {
     return pagina === nombrePagina
-      ? "btn btn-success btn-sm nav-boton"
-      : "btn btn-outline-success btn-sm nav-boton";
+      ? "nav-link-custom nav-link-activo"
+      : "nav-link-custom";
   }
 
   return (
-    <nav className="navbar navbar-expand-lg bg-white navbar-light shadow-sm sticky-top">
-      <div className="container">
+    <nav className="navbar-principal">
+      <div className="container navbar-contenido">
         <button
-          className="navbar-brand fw-bold text-success fs-4 btn btn-link text-decoration-none p-0"
+          className="navbar-logo"
           onClick={() => setPagina("inicio")}
         >
-          🐾 Sanos y Salvos
+          <span className="logo-icono">🐾</span>
+          <span>Sanos y Salvos</span>
         </button>
 
-        <div className="d-flex gap-2 flex-wrap">
+        <div className="navbar-menu">
           <button
             className={claseBoton("inicio")}
             onClick={() => setPagina("inicio")}
