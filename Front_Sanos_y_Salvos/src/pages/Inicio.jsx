@@ -1,35 +1,44 @@
+import Carrusel from "../components/Carrusel";
+import Servicios from "../components/Servicios";
+
 function Inicio({ setPagina }) {
   return (
-    <section className="container mt-4">
-      <div className="p-4 bg-light rounded border">
-        <h1 className="text-success fw-bold">Sanos y Salvos</h1>
+    <>
+      <Carrusel setPagina={setPagina} />
 
-        <p className="mt-3">
-          Plataforma para apoyar la localización y recuperación de mascotas
-          perdidas o encontradas.
-        </p>
+      <section className="container py-5">
+        <div className="row align-items-center">
+          <div className="col-md-6">
+            <img
+              src="/template/images/about.jpg"
+              className="img-fluid rounded shadow-sm"
+              alt="Mascota"
+            />
+          </div>
 
-        <p>
-          El objetivo es centralizar los reportes para que dueños, ciudadanos,
-          refugios, clínicas veterinarias y municipalidades puedan colaborar de
-          forma más ordenada.
-        </p>
+          <div className="col-md-6 mt-4 mt-md-0">
+            <p className="text-success fw-bold">Sobre la plataforma</p>
 
-        <button
-          className="btn btn-success me-2"
-          onClick={() => setPagina("reportar")}
-        >
-          Reportar mascota
-        </button>
+            <h2>Información centralizada para una búsqueda más rápida</h2>
 
-        <button
-          className="btn btn-outline-success"
-          onClick={() => setPagina("mascotas")}
-        >
-          Ver mascotas
-        </button>
-      </div>
-    </section>
+            <p>
+              Cuando una mascota se pierde, los reportes suelen quedar
+              dispersos en redes sociales, carteles, refugios y clínicas.
+              Sanos y Salvos busca reunir esa información en una sola
+              plataforma.
+            </p>
+
+            <p>
+              La solución permite registrar mascotas perdidas o encontradas,
+              revisar reportes y facilitar la colaboración entre personas e
+              instituciones.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <Servicios setPagina={setPagina} />
+    </>
   );
 }
 

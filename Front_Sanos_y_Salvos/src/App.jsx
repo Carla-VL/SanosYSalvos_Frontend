@@ -1,5 +1,7 @@
 import { useState } from "react";
+import Topbar from "./components/Topbar";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import Inicio from "./pages/Inicio";
 import Mascotas from "./pages/Mascotas";
 import Reportar from "./pages/Reportar";
@@ -10,6 +12,7 @@ function App() {
 
   return (
     <>
+      <Topbar />
       <Navbar setPagina={setPagina} />
 
       <main>
@@ -18,6 +21,8 @@ function App() {
         {pagina === "reportar" && <Reportar />}
         {pagina === "reportes" && <Reportes />}
       </main>
+
+      <Footer />
     </>
   );
 }
