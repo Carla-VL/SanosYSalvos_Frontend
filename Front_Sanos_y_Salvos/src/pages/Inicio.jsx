@@ -1,5 +1,6 @@
 import Carrusel from "../components/Carrusel";
 import Servicios from "../components/Servicios";
+import MapaResumen from "../components/MapaResumen";
 
 function Inicio({ setPagina }) {
   return (
@@ -38,6 +39,7 @@ function Inicio({ setPagina }) {
       </section>
 
       <Servicios setPagina={setPagina} />
+      <MapaResumen setPagina={setPagina} />
     </>
   );
 }
