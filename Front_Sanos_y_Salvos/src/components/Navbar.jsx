@@ -12,7 +12,9 @@ function Navbar({ setPagina, pagina }) {
           className="navbar-logo"
           onClick={() => setPagina("inicio")}
         >
-          <span className="logo-icono">🐾</span>
+          <span className="logo-icono">
+            <i className="flaticon-pawprint"></i>
+          </span>
           <span>Sanos y Salvos</span>
         </button>
 

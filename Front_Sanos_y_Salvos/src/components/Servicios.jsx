@@ -1,7 +1,9 @@
 function Servicios({ setPagina }) {
   return (
     <section className="servicios-section reveal">
-      <div className="container">
+      <div className="servicios-banner"></div>
+
+      <div className="container servicios-contenido">
         <div className="text-center mb-5">
           <p className="text-success fw-bold">Funciones principales</p>
           <h2>¿Cómo ayuda Sanos y Salvos?</h2>
@@ -12,10 +14,12 @@ function Servicios({ setPagina }) {
           </p>
         </div>
 
-        <div className="row g-4">
+        <div className="row g-4 servicios-row">
           <div className="col-md-4">
             <div className="servicio-card">
-              <div className="servicio-icono">🐶</div>
+              <div className="servicio-icono">
+                <i className="bi bi-journal-plus"></i>
+              </div>
 
               <h4>Reportar mascota</h4>
 
@@ -28,14 +32,16 @@ function Servicios({ setPagina }) {
                 className="servicio-boton"
                 onClick={() => setPagina("reportar")}
               >
-                →
+                <i className="bi bi-arrow-right"></i>
               </button>
             </div>
           </div>
 
           <div className="col-md-4">
             <div className="servicio-card">
-              <div className="servicio-icono">🔎</div>
+              <div className="servicio-icono">
+                <i className="bi bi-search"></i>
+              </div>
 
               <h4>Buscar mascotas</h4>
 
@@ -48,14 +54,16 @@ function Servicios({ setPagina }) {
                 className="servicio-boton"
                 onClick={() => setPagina("mascotas")}
               >
-                →
+                <i className="bi bi-arrow-right"></i>
               </button>
             </div>
           </div>
 
           <div className="col-md-4">
             <div className="servicio-card">
-              <div className="servicio-icono">🤝</div>
+              <div className="servicio-icono">
+                <i className="bi bi-people-fill"></i>
+              </div>
 
               <h4>Colaborar</h4>
 
@@ -68,7 +76,7 @@ function Servicios({ setPagina }) {
                 className="servicio-boton"
                 onClick={() => setPagina("reportes")}
               >
-                →
+                <i className="bi bi-arrow-right"></i>
               </button>
             </div>
           </div>
