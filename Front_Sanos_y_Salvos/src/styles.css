@@ -518,3 +518,29 @@ button,
     height: 360px;
   }
 }
+
+.opciones-radio {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.opcion-radio {
+  border: 1px solid #d8e3df;
+  border-radius: 12px;
+  padding: 10px 16px;
+  background-color: #ffffff;
+  cursor: pointer;
+  font-family: "Quicksand", Arial, sans-serif;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.opcion-radio input {
+  margin-right: 8px;
+}
+
+.opcion-radio:hover {
+  border-color: #00b956;
+  background-color: #eefbf6;
+}

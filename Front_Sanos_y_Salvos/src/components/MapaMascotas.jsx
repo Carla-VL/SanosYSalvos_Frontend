@@ -27,12 +27,14 @@ function MapaMascotas() {
   ];
 
   useEffect(() => {
-    if (mapa.current) return;
-
     const token = import.meta.env.VITE_MAPBOX_TOKEN;
 
     if (!token) {
       console.error("Falta configurar VITE_MAPBOX_TOKEN en el archivo .env");
+      return;
+    }
+
+    if (!mapaContenedor.current) {
       return;
     }
 
@@ -62,8 +64,15 @@ function MapaMascotas() {
         .addTo(mapa.current);
     });
 
+    mapa.current.on("load", () => {
+      mapa.current.resize();
+    });
+
     return () => {
-      mapa.current.remove();
+      if (mapa.current) {
+        mapa.current.remove();
+        mapa.current = null;
+      }
     };
   }, []);
 
