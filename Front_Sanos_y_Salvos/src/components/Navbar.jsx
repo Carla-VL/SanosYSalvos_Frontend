@@ -48,6 +48,13 @@ function Navbar({ setPagina, pagina }) {
           </button>
 
           <button
+            className={claseBoton("mapa")}
+            onClick={() => setPagina("mapa")}
+          >
+            Mapa
+          </button>
+
+          <button
             className={claseBoton("login")}
             onClick={() => setPagina("login")}
           >
