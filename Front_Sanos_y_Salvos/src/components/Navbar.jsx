@@ -46,6 +46,20 @@ function Navbar({ setPagina, pagina }) {
           >
             Reportes
           </button>
+
+          <button
+            className={claseBoton("login")}
+            onClick={() => setPagina("login")}
+          >
+            Iniciar sesión
+          </button>
+
+          <button
+            className={claseBoton("registro")}
+            onClick={() => setPagina("registro")}
+          >
+            Registrarse
+          </button>
         </div>
       </div>
     </nav>
