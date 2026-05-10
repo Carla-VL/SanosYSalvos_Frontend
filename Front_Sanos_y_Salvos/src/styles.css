@@ -1,0 +1,61 @@
+.carousel-imagen {
+  height: 430px;
+  object-fit: cover;
+}
+
+.carousel-texto {
+  background-color: rgba(0, 0, 0, 0.55);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.card-img-mascota {
+  height: 220px;
+  object-fit: cover;
+}
+
+.seccion-titulo {
+  color: #198754;
+  font-weight: bold;
+}
+
+.footer-principal {
+  margin-top: 60px;
+}
+
+@media (max-width: 768px) {
+  .carousel-imagen {
+    height: 330px;
+  }
+
+  .carousel-texto h1 {
+    font-size: 24px;
+  }
+
+  .carousel-texto p {
+    font-size: 14px;
+  }
+}
+
+.card-img-mascota {
+  height: 220px;
+  object-fit: cover;
+}
+
+.estado-badge {
+  font-size: 13px;
+}
+
+.formulario-reporte {
+  max-width: 950px;
+  margin: 0 auto;
+}
+
+.seccion-encabezado {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.card-reporte {
+  min-height: 100%;
+}

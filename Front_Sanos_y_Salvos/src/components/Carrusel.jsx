@@ -5,12 +5,11 @@ function Carrusel({ setPagina }) {
         <div className="carousel-item active">
           <img
             src="/template/images/bg_1.jpg"
-            className="d-block w-100"
+            className="d-block w-100 carousel-imagen"
             alt="Mascotas"
-            style={{ height: "480px", objectFit: "cover" }}
           />
 
-          <div className="carousel-caption bg-dark bg-opacity-50 rounded p-3">
+          <div className="carousel-caption carousel-texto">
             <h1 className="fw-bold">
               Ayudamos a que las mascotas vuelvan a casa
             </h1>
@@ -39,12 +38,11 @@ function Carrusel({ setPagina }) {
         <div className="carousel-item">
           <img
             src="/template/images/bg_2.jpg"
-            className="d-block w-100"
+            className="d-block w-100 carousel-imagen"
             alt="Búsqueda de mascotas"
-            style={{ height: "480px", objectFit: "cover" }}
           />
 
-          <div className="carousel-caption bg-dark bg-opacity-50 rounded p-3">
+          <div className="carousel-caption carousel-texto">
             <h1 className="fw-bold">Reportes organizados en un solo lugar</h1>
 
             <p>
@@ -64,12 +62,11 @@ function Carrusel({ setPagina }) {
         <div className="carousel-item">
           <img
             src="/template/images/bg_3.jpg"
-            className="d-block w-100"
+            className="d-block w-100 carousel-imagen"
             alt="Colaboración"
-            style={{ height: "480px", objectFit: "cover" }}
           />
 
-          <div className="carousel-caption bg-dark bg-opacity-50 rounded p-3">
+          <div className="carousel-caption carousel-texto">
             <h1 className="fw-bold">Una red de apoyo para mascotas</h1>
 
             <p>
