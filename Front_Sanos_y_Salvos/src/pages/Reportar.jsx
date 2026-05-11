@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { crearReporte } from "../services/api"; 
 
 function Reportar() {
   const [formulario, setFormulario] = useState({
@@ -33,46 +34,33 @@ function Reportar() {
     if (!formulario.nombreAnimal.trim()) {
       nuevosErrores.nombreAnimal = "El nombre del animal es obligatorio.";
     }
-
     if (!formulario.especie.trim()) {
       nuevosErrores.especie = "La especie es obligatoria.";
     }
-
     if (!formulario.raza.trim()) {
       nuevosErrores.raza = "La raza es obligatoria.";
     }
-
     if (!formulario.sexo) {
       nuevosErrores.sexo = "Debes seleccionar el sexo del animal.";
     }
-
     if (!formulario.estadoReproductivo) {
-      nuevosErrores.estadoReproductivo =
-        "Debes seleccionar el estado reproductivo.";
+      nuevosErrores.estadoReproductivo = "Debes seleccionar el estado reproductivo.";
     }
-
     if (!formulario.edadAproximada.trim()) {
       nuevosErrores.edadAproximada = "La edad aproximada es obligatoria.";
     }
-
     if (!formulario.colorPatron.trim()) {
       nuevosErrores.colorPatron = "Debes indicar color y patrón del animal.";
     }
-
     if (!formulario.tamanoPeso.trim()) {
-      nuevosErrores.tamanoPeso =
-        "Debes indicar tamaño y peso aproximado del animal.";
+      nuevosErrores.tamanoPeso = "Debes indicar tamaño y peso aproximado del animal.";
     }
-
     if (!formulario.caracteristicasEspeciales.trim()) {
-      nuevosErrores.caracteristicasEspeciales =
-        "Debes agregar características físicas que ayuden a identificarlo.";
+      nuevosErrores.caracteristicasEspeciales = "Debes agregar características físicas que ayuden a identificarlo.";
     }
-
     if (!formulario.ubicacion.trim()) {
       nuevosErrores.ubicacion = "La ubicación es obligatoria.";
     }
-
     if (!formulario.contacto.trim()) {
       nuevosErrores.contacto = "El contacto es obligatorio.";
     }
@@ -80,7 +68,7 @@ function Reportar() {
     return nuevosErrores;
   }
 
-  function manejarEnvio(evento) {
+  async function manejarEnvio(evento) {
     evento.preventDefault();
 
     const validaciones = validarFormulario();
@@ -91,43 +79,55 @@ function Reportar() {
       return;
     }
 
-    console.log("Reporte listo para enviar al BFF:", formulario);
+    const payloadMascota = {
+      ...formulario,
+      nombre: formulario.nombreAnimal, 
+      edad: parseInt(formulario.edadAproximada) || 0, 
+      vacunas: formulario.estadoReproductivo || "No especifica"
+    };
 
-    setMensaje("Reporte validado correctamente. Pendiente conexión con BFF.");
+    console.log("🚀 Enviando datos al BFF:", payloadMascota);
 
-    setFormulario({
-      microchip: "",
-      nombreAnimal: "",
-      especie: "",
-      raza: "",
-      sexo: "",
-      estadoReproductivo: "",
-      edadAproximada: "",
-      colorPatron: "",
-      tamanoPeso: "",
-      caracteristicasEspeciales: "",
-      ubicacion: "",
-      tipoReporte: "PERDIDA",
-      contacto: "",
-    });
+    try {
+      
+      await crearReporte(payloadMascota, formulario.tipoReporte.toLowerCase());
+      
+      setMensaje("¡Reporte guardado con éxito en MySQL! Puedes ir a la pestaña 'Mascotas' para revisarlo. 🐾");
+
+      
+      setFormulario({
+        microchip: "",
+        nombreAnimal: "",
+        especie: "",
+        raza: "",
+        sexo: "",
+        estadoReproductivo: "",
+        edadAproximada: "",
+        colorPatron: "",
+        tamanoPeso: "",
+        caracteristicasEspeciales: "",
+        ubicacion: "",
+        tipoReporte: "PERDIDA",
+        contacto: "",
+      });
+
+    } catch (error) {
+      console.error(" Error en la petición:", error);
+      setMensaje("No se pudo conectar con el servidor. Revisa si el BFF (8085) está encendido.");
+    }
   }
 
   return (
-    <section className="container py-5 reveal">
+    <section className="container py-5">
       <div className="text-center mb-5 seccion-encabezado">
         <p className="text-success fw-bold">Nuevo reporte</p>
         <h1>Reportar mascota</h1>
-
         <p>
-          Completa los datos del animal para facilitar su identificación y apoyar
-          la búsqueda o recuperación.
+          Completa los datos del animal para facilitar su identificación y apoyar la búsqueda.
         </p>
       </div>
 
-      <form
-        className="card shadow-sm border-0 p-4 formulario-reporte"
-        onSubmit={manejarEnvio}
-      >
+      <form className="card shadow-sm border-0 p-4 formulario-reporte" onSubmit={manejarEnvio}>
         <div className="row">
           <div className="col-md-6 mb-3">
             <label className="form-label">Registro de microchip</label>
@@ -137,7 +137,7 @@ function Reportar() {
               name="microchip"
               value={formulario.microchip}
               onChange={manejarCambio}
-              placeholder="Opcional, si cuenta con microchip"
+              placeholder="Opcional"
             />
           </div>
 
@@ -149,11 +149,9 @@ function Reportar() {
               name="nombreAnimal"
               value={formulario.nombreAnimal}
               onChange={manejarCambio}
-              placeholder="Ej: Luna, Toby, Milo"
+              placeholder="Ej: Luna, Toby"
             />
-            {errores.nombreAnimal && (
-              <small className="text-danger">{errores.nombreAnimal}</small>
-            )}
+            {errores.nombreAnimal && <small className="text-danger">{errores.nombreAnimal}</small>}
           </div>
 
           <div className="col-md-6 mb-3">
@@ -164,11 +162,9 @@ function Reportar() {
               name="especie"
               value={formulario.especie}
               onChange={manejarCambio}
-              placeholder="Ej: perro, gato, etc."
+              placeholder="Ej: perro, gato"
             />
-            {errores.especie && (
-              <small className="text-danger">{errores.especie}</small>
-            )}
+            {errores.especie && <small className="text-danger">{errores.especie}</small>}
           </div>
 
           <div className="col-md-6 mb-3">
@@ -179,77 +175,35 @@ function Reportar() {
               name="raza"
               value={formulario.raza}
               onChange={manejarCambio}
-              placeholder="Ej: mestizo, poodle, labrador"
+              placeholder="Ej: mestizo, poodle"
             />
-            {errores.raza && (
-              <small className="text-danger">{errores.raza}</small>
-            )}
+            {errores.raza && <small className="text-danger">{errores.raza}</small>}
           </div>
 
           <div className="col-md-6 mb-3">
             <label className="form-label d-block">Sexo</label>
-
             <div className="opciones-radio">
               <label className="opcion-radio">
-                <input
-                  type="radio"
-                  name="sexo"
-                  value="Macho"
-                  checked={formulario.sexo === "Macho"}
-                  onChange={manejarCambio}
-                />
-                Macho
+                <input type="radio" name="sexo" value="Macho" checked={formulario.sexo === "Macho"} onChange={manejarCambio} /> Macho
               </label>
-
               <label className="opcion-radio">
-                <input
-                  type="radio"
-                  name="sexo"
-                  value="Hembra"
-                  checked={formulario.sexo === "Hembra"}
-                  onChange={manejarCambio}
-                />
-                Hembra
+                <input type="radio" name="sexo" value="Hembra" checked={formulario.sexo === "Hembra"} onChange={manejarCambio} /> Hembra
               </label>
             </div>
-
-            {errores.sexo && (
-              <small className="text-danger">{errores.sexo}</small>
-            )}
+            {errores.sexo && <small className="text-danger">{errores.sexo}</small>}
           </div>
 
           <div className="col-md-6 mb-3">
             <label className="form-label d-block">Estado reproductivo</label>
-
             <div className="opciones-radio">
               <label className="opcion-radio">
-                <input
-                  type="radio"
-                  name="estadoReproductivo"
-                  value="Castrado"
-                  checked={formulario.estadoReproductivo === "Castrado"}
-                  onChange={manejarCambio}
-                />
-                Castrado
+                <input type="radio" name="estadoReproductivo" value="Castrado" checked={formulario.estadoReproductivo === "Castrado"} onChange={manejarCambio} /> Castrado
               </label>
-
               <label className="opcion-radio">
-                <input
-                  type="radio"
-                  name="estadoReproductivo"
-                  value="No castrado"
-                  checked={formulario.estadoReproductivo === "No castrado"}
-                  onChange={manejarCambio}
-                />
-                No castrado
+                <input type="radio" name="estadoReproductivo" value="No castrado" checked={formulario.estadoReproductivo === "No castrado"} onChange={manejarCambio} /> No castrado
               </label>
             </div>
-
-            {errores.estadoReproductivo && (
-              <small className="text-danger">
-                {errores.estadoReproductivo}
-              </small>
-            )}
+            {errores.estadoReproductivo && <small className="text-danger">{errores.estadoReproductivo}</small>}
           </div>
 
           <div className="col-md-6 mb-3">
@@ -260,21 +214,14 @@ function Reportar() {
               name="edadAproximada"
               value={formulario.edadAproximada}
               onChange={manejarCambio}
-              placeholder="Ej: 2 años, cachorro, adulto mayor"
+              placeholder="Ej: 2"
             />
-            {errores.edadAproximada && (
-              <small className="text-danger">{errores.edadAproximada}</small>
-            )}
+            {errores.edadAproximada && <small className="text-danger">{errores.edadAproximada}</small>}
           </div>
 
           <div className="col-md-6 mb-3">
             <label className="form-label">Tipo de reporte</label>
-            <select
-              className="form-select"
-              name="tipoReporte"
-              value={formulario.tipoReporte}
-              onChange={manejarCambio}
-            >
+            <select className="form-select" name="tipoReporte" value={formulario.tipoReporte} onChange={manejarCambio}>
               <option value="PERDIDA">Mascota perdida</option>
               <option value="ENCONTRADA">Mascota encontrada</option>
             </select>
@@ -288,11 +235,9 @@ function Reportar() {
               name="colorPatron"
               value={formulario.colorPatron}
               onChange={manejarCambio}
-              placeholder="Ej: blanco con manchas cafés, atigrado"
+              placeholder="Ej: blanco negro"
             />
-            {errores.colorPatron && (
-              <small className="text-danger">{errores.colorPatron}</small>
-            )}
+            {errores.colorPatron && <small className="text-danger">{errores.colorPatron}</small>}
           </div>
 
           <div className="col-md-6 mb-3">
@@ -303,30 +248,22 @@ function Reportar() {
               name="tamanoPeso"
               value={formulario.tamanoPeso}
               onChange={manejarCambio}
-              placeholder="Ej: mediano, aprox. 12 kg"
+              placeholder="Ej: mediano"
             />
-            {errores.tamanoPeso && (
-              <small className="text-danger">{errores.tamanoPeso}</small>
-            )}
+            {errores.tamanoPeso && <small className="text-danger">{errores.tamanoPeso}</small>}
           </div>
 
           <div className="col-12 mb-3">
-            <label className="form-label">
-              Características físicas detalladas
-            </label>
+            <label className="form-label">Características físicas detalladas</label>
             <textarea
               className="form-control"
               name="caracteristicasEspeciales"
               value={formulario.caracteristicasEspeciales}
               onChange={manejarCambio}
               rows="4"
-              placeholder="Ej: cicatriz en una pata, cola corta, collar rojo, camina de forma particular, oreja doblada, etc."
+              placeholder="Detalles únicos..."
             />
-            {errores.caracteristicasEspeciales && (
-              <small className="text-danger">
-                {errores.caracteristicasEspeciales}
-              </small>
-            )}
+            {errores.caracteristicasEspeciales && <small className="text-danger">{errores.caracteristicasEspeciales}</small>}
           </div>
 
           <div className="col-md-6 mb-3">
@@ -337,11 +274,9 @@ function Reportar() {
               name="ubicacion"
               value={formulario.ubicacion}
               onChange={manejarCambio}
-              placeholder="Ej: Maipú, Santiago Centro, La Florida"
+              placeholder="Ej: Maipú"
             />
-            {errores.ubicacion && (
-              <small className="text-danger">{errores.ubicacion}</small>
-            )}
+            {errores.ubicacion && <small className="text-danger">{errores.ubicacion}</small>}
           </div>
 
           <div className="col-md-6 mb-3">
@@ -352,11 +287,9 @@ function Reportar() {
               name="contacto"
               value={formulario.contacto}
               onChange={manejarCambio}
-              placeholder="Teléfono o correo de contacto"
+              placeholder="Teléfono o correo"
             />
-            {errores.contacto && (
-              <small className="text-danger">{errores.contacto}</small>
-            )}
+            {errores.contacto && <small className="text-danger">{errores.contacto}</small>}
           </div>
         </div>
 

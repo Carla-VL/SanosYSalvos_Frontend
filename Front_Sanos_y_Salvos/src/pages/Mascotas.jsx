@@ -1,59 +1,71 @@
+import { useEffect, useState } from 'react';
 import MascotaCard from "../components/MascotaCard";
+import { obtenerMascotas } from '../services/api';
 
 function Mascotas() {
-  const mascotas = [
-    {
-      id: 1,
-      nombre: "Luna",
-      tipo: "Perro",
-      raza: "Mestiza",
-      color: "Blanco con café",
-      estado: "Perdida",
-      ubicacion: "Maipú",
-      imagen: "/template/images/gallery-1.jpg",
-    },
-    {
-      id: 2,
-      nombre: "Milo",
-      tipo: "Gato",
-      raza: "Doméstico",
-      color: "Gris",
-      estado: "Encontrada",
-      ubicacion: "Santiago Centro",
-      imagen: "/template/images/gallery-2.jpg",
-    },
-    {
-      id: 3,
-      nombre: "Toby",
-      tipo: "Perro",
-      raza: "Poodle",
-      color: "Blanco",
-      estado: "Perdida",
-      ubicacion: "La Florida",
-      imagen: "/template/images/gallery-3.jpg",
-    },
-  ];
+  const [mascotas, setMascotas] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [errorPeticion, setErrorPeticion] = useState(null);
+
+  useEffect(() => {
+    async function cargarDatos() {
+      console.log(" [DEBUG] Intentando conectar con el BFF en el puerto 8085...");
+      try {
+        const data = await obtenerMascotas();
+        console.log(" [DEBUG] Datos recibidos con éxito desde el BFF:", data);
+        setMascotas(data);
+      } catch (error) {
+        console.error(" [DEBUG] La petición al BFF falló:", error);
+        setErrorPeticion(error.message);
+      } finally {
+        setCargando(false);
+      }
+    }
+    cargarDatos();
+  }, []);
 
   return (
-    <section className="container py-5 reveal">
+    
+    <section className="container py-5"> 
       <div className="text-center mb-5 seccion-encabezado">
         <p className="text-success fw-bold">Mascotas</p>
         <h1>Mascotas registradas</h1>
-
         <p>
-          Aquí se muestran mascotas perdidas o encontradas registradas en la
-          plataforma. Esta información ayuda a centralizar los reportes y
-          facilitar la búsqueda.
+          Aquí se muestran las mascotas reales rescatadas desde tu base de datos a través del BFF.
         </p>
       </div>
 
-      <div className="row g-4">
-        {mascotas.map((mascota) => (
-          <div className="col-md-4" key={mascota.id}>
-            <MascotaCard mascota={mascota} />
-          </div>
-        ))}
-      </div>
+      {}
+      {cargando && (
+        <div className="text-center py-5 text-success">
+          <h4>⏳ Conectando con el BFF... Buscando peluditos...</h4>
+        </div>
+      )}
+
+      {}
+      {errorPeticion && (
+        <div className="alert alert-danger text-center mx-auto" style={{maxWidth: '500px'}}>
+          <strong>¡Ups! Algo salió mal:</strong> {errorPeticion} <br />
+          <small>Revisa si el micro de Mascotas (8080) y el BFF (8085) están encendidos.</small>
+        </div>
+      )}
+
+      {}
+      {!cargando && !errorPeticion && (
+        <div className="row g-4">
+          {mascotas.length === 0 ? (
+            <div className="text-center col-12">
+              <p className="alert alert-warning">El backend respondió, pero no tienes ninguna mascota registrada en la base de datos.</p>
+            </div>
+          ) : (
+            mascotas.map((mascota, index) => (
+              <div className="col-md-4" key={mascota.id || index}>
+                <MascotaCard mascota={mascota} />
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </section>
   );
 }
