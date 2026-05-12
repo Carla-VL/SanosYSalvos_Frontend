@@ -68,7 +68,7 @@ function Reportar() {
     return nuevosErrores;
   }
 
-  async function manejarEnvio(evento) {
+ async function manejarEnvio(evento) {
     evento.preventDefault();
 
     const validaciones = validarFormulario();
@@ -86,15 +86,15 @@ function Reportar() {
       vacunas: formulario.estadoReproductivo || "No especifica"
     };
 
-    console.log("🚀 Enviando datos al BFF:", payloadMascota);
-
     try {
-      
       await crearReporte(payloadMascota, formulario.tipoReporte.toLowerCase());
       
-      setMensaje("¡Reporte guardado con éxito en MySQL! Puedes ir a la pestaña 'Mascotas' para revisarlo. 🐾");
-
       
+      const nombreLimpio = formulario.nombreAnimal.trim().toLowerCase();
+      localStorage.setItem(`estado_${nombreLimpio}`, formulario.tipoReporte.toUpperCase());
+      
+      setMensaje("¡Reporte guardado con éxito! Puedes ir a la pestaña 'Reportes' para revisarlo. ");
+
       setFormulario({
         microchip: "",
         nombreAnimal: "",
@@ -113,7 +113,7 @@ function Reportar() {
 
     } catch (error) {
       console.error(" Error en la petición:", error);
-      setMensaje("No se pudo conectar con el servidor. Revisa si el BFF (8085) está encendido.");
+      setMensaje("No se pudo conectar con el servidor. Revisa si el BFF está encendido.");
     }
   }
 

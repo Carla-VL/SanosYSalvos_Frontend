@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { registrarUsuario } from "../services/api"; 
 
 function Registro({ setPagina }) {
   const [formulario, setFormulario] = useState({
-    nombre: "",
+    nombrecompleto: "",
     correo: "",
     password: "",
     confirmarPassword: "",
@@ -10,6 +11,7 @@ function Registro({ setPagina }) {
 
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState("");
+  const [cargando, setCargando] = useState(false); 
 
   function manejarCambio(evento) {
     setFormulario({
@@ -24,8 +26,8 @@ function Registro({ setPagina }) {
     const tieneMayuscula = /[A-Z]/;
     const tieneNumero = /[0-9]/;
 
-    if (!formulario.nombre.trim()) {
-      nuevosErrores.nombre = "El nombre es obligatorio.";
+    if (!formulario.nombrecompleto.trim()) {
+      nuevosErrores.nombrecompleto = "El nombre es obligatorio.";
     }
 
     if (!formulario.correo.trim()) {
@@ -53,7 +55,8 @@ function Registro({ setPagina }) {
     return nuevosErrores;
   }
 
-  function manejarRegistro(evento) {
+
+  async function manejarRegistro(evento) {
     evento.preventDefault();
 
     const validaciones = validarFormulario();
@@ -64,24 +67,44 @@ function Registro({ setPagina }) {
       return;
     }
 
-    console.log("Datos listos para enviar al BFF:", {
-      nombre: formulario.nombre,
-      correo: formulario.correo,
-      password: formulario.password,
-    });
+    setCargando(true);
+    console.log(" Enviando datos al microservicio de Usuarios");
 
-    setMensaje("Datos validados correctamente. Pendiente conexión con BFF.");
+    try {
+      const datosParaEnviar = {
+        nombrecompleto: formulario.nombre,
+        email: formulario.correo,
+        username: formulario.correo, // Usamos el correo como username
+        password: formulario.password
+      };
 
-    setFormulario({
-      nombre: "",
-      correo: "",
-      password: "",
-      confirmarPassword: "",
-    });
+      const respuesta = await registrarUsuario(datosParaEnviar);
+      console.log(" Servidor respondió:", respuesta);
+
+      setMensaje("¡Cuenta creada con éxito! Llevándote al inicio de sesión...");
+
+      setFormulario({
+        nombre: "",
+        correo: "",
+        password: "",
+        confirmarPassword: "",
+      });
+
+      setTimeout(() => {
+        setPagina("login");
+      }, 2000);
+
+    } catch (error) {
+      console.error("❌ Error en el Registro:", error);
+      setErrores({ global: "No se pudo crear la cuenta. Revisa si el microservicio (8083) está arriba." });
+    } finally {
+      setCargando(false);
+    }
   }
 
   return (
-    <section className="container py-5 reveal">
+  
+    <section className="container py-5">
       <div className="text-center mb-5 seccion-encabezado">
         <p className="text-success fw-bold">Crear cuenta</p>
         <h1>Registrarse</h1>
@@ -99,9 +122,10 @@ function Registro({ setPagina }) {
           <input
             className="form-control"
             type="text"
-            name="nombre"
+            name="nombrecompleto"
             value={formulario.nombre}
             onChange={manejarCambio}
+            disabled={cargando}
           />
           {errores.nombre && <small className="text-danger">{errores.nombre}</small>}
         </div>
@@ -115,6 +139,7 @@ function Registro({ setPagina }) {
             value={formulario.correo}
             onChange={manejarCambio}
             placeholder="ejemplo@correo.com"
+            disabled={cargando}
           />
           {errores.correo && <small className="text-danger">{errores.correo}</small>}
         </div>
@@ -128,6 +153,7 @@ function Registro({ setPagina }) {
             value={formulario.password}
             onChange={manejarCambio}
             placeholder="Mínimo 8 caracteres, una mayúscula y un número"
+            disabled={cargando}
           />
           {errores.password && (
             <small className="text-danger">{errores.password}</small>
@@ -142,14 +168,18 @@ function Registro({ setPagina }) {
             name="confirmarPassword"
             value={formulario.confirmarPassword}
             onChange={manejarCambio}
+            disabled={cargando}
           />
           {errores.confirmarPassword && (
             <small className="text-danger">{errores.confirmarPassword}</small>
           )}
         </div>
 
-        <button className="btn btn-success" type="submit">
-          Crear cuenta
+        {/* Error general del servidor */}
+        {errores.global && <div className="alert alert-danger p-2 mb-3">{errores.global}</div>}
+
+        <button className="btn btn-success w-100" type="submit" disabled={cargando}>
+          {cargando ? "Registrando..." : "Crear cuenta"}
         </button>
 
         {mensaje && <div className="alert alert-success mt-3">{mensaje}</div>}
@@ -160,6 +190,7 @@ function Registro({ setPagina }) {
             type="button"
             className="btn btn-link p-0 text-success fw-bold"
             onClick={() => setPagina("login")}
+            disabled={cargando}
           >
             Iniciar sesión
           </button>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { login } from "../services/api"; // Importamos tu función real
 
 function Login({ setPagina }) {
   const [formulario, setFormulario] = useState({
@@ -8,6 +9,7 @@ function Login({ setPagina }) {
 
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState("");
+  const [cargando, setCargando] = useState(false);
 
   function manejarCambio(evento) {
     setFormulario({
@@ -18,22 +20,16 @@ function Login({ setPagina }) {
 
   function validarFormulario() {
     const nuevosErrores = {};
-    const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
     if (!formulario.correo.trim()) {
       nuevosErrores.correo = "El correo es obligatorio.";
-    } else if (!correoValido.test(formulario.correo)) {
-      nuevosErrores.correo = "Ingresa un correo válido.";
     }
-
     if (!formulario.password) {
       nuevosErrores.password = "La contraseña es obligatoria.";
     }
-
     return nuevosErrores;
   }
 
-  function manejarLogin(evento) {
+  async function manejarLogin(evento) {
     evento.preventDefault();
 
     const validaciones = validarFormulario();
@@ -44,30 +40,41 @@ function Login({ setPagina }) {
       return;
     }
 
-    console.log("Credenciales listas para enviar al BFF:", formulario);
+    setCargando(true);
+    console.log(" Enviando credenciales al microservicio de Auth (8081)...");
 
-    setMensaje("Datos validados correctamente. Pendiente conexión con BFF.");
+    try {
+     
+      const data = await login(formulario.correo, formulario.password);
+      
+      if (data && data.token) {
+        setMensaje("¡Acceso concedido! Entrando a Sanos y Salvos... ");
+        
+        
+        setTimeout(() => {
+          setPagina("inicio"); 
+        }, 1500);
+      } else {
+       
+        setErrores({ global: "Correo o contraseña incorrectos." });
+      }
 
-    setFormulario({
-      correo: "",
-      password: "",
-    });
+    } catch (error) {
+      console.error(" Error conectando al Login:", error);
+      setErrores({ global: "El servidor de autenticación (8081) no responde." });
+    } finally {
+      setCargando(false);
+    }
   }
 
   return (
-    <section className="container py-5 reveal">
+    <section className="container py-5">
       <div className="text-center mb-5 seccion-encabezado">
         <p className="text-success fw-bold">Acceso de usuario</p>
         <h1>Iniciar sesión</h1>
-        <p>
-          Ingresa tus datos para acceder a la plataforma Sanos y Salvos.
-        </p>
       </div>
 
-      <form
-        className="card shadow-sm border-0 p-4 formulario-reporte"
-        onSubmit={manejarLogin}
-      >
+      <form className="card shadow-sm border-0 p-4 formulario-reporte" onSubmit={manejarLogin}>
         <div className="mb-3">
           <label className="form-label">Correo electrónico</label>
           <input
@@ -77,6 +84,7 @@ function Login({ setPagina }) {
             value={formulario.correo}
             onChange={manejarCambio}
             placeholder="ejemplo@correo.com"
+            disabled={cargando}
           />
           {errores.correo && <small className="text-danger">{errores.correo}</small>}
         </div>
@@ -89,25 +97,22 @@ function Login({ setPagina }) {
             name="password"
             value={formulario.password}
             onChange={manejarCambio}
+            disabled={cargando}
           />
-          {errores.password && (
-            <small className="text-danger">{errores.password}</small>
-          )}
+          {errores.password && <small className="text-danger">{errores.password}</small>}
         </div>
 
-        <button className="btn btn-success" type="submit">
-          Iniciar sesión
+        {errores.global && <div className="alert alert-danger p-2 mb-3">{errores.global}</div>}
+
+        <button className="btn btn-success w-100 mb-3" type="submit" disabled={cargando}>
+          {cargando ? "Validando..." : "Iniciar sesión"}
         </button>
 
         {mensaje && <div className="alert alert-success mt-3">{mensaje}</div>}
 
         <p className="mt-3 mb-0 text-center">
           ¿No tienes cuenta?{" "}
-          <button
-            type="button"
-            className="btn btn-link p-0 text-success fw-bold"
-            onClick={() => setPagina("registro")}
-          >
+          <button type="button" className="btn btn-link p-0 text-success fw-bold" onClick={() => setPagina("registro")}>
             Registrarse
           </button>
         </p>
