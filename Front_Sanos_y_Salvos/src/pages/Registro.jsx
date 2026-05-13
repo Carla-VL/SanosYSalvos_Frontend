@@ -72,7 +72,7 @@ function Registro({ setPagina }) {
 
     try {
       const datosParaEnviar = {
-        nombrecompleto: formulario.nombre,
+        nombrecompleto: formulario.nombrecompleto,
         email: formulario.correo,
         username: formulario.correo, // Usamos el correo como username
         password: formulario.password
@@ -84,7 +84,7 @@ function Registro({ setPagina }) {
       setMensaje("¡Cuenta creada con éxito! Llevándote al inicio de sesión...");
 
       setFormulario({
-        nombre: "",
+        nombrecompleto: "",
         correo: "",
         password: "",
         confirmarPassword: "",
@@ -123,11 +123,13 @@ function Registro({ setPagina }) {
             className="form-control"
             type="text"
             name="nombrecompleto"
-            value={formulario.nombre}
+            value={formulario.nombrecompleto}
             onChange={manejarCambio}
             disabled={cargando}
           />
-          {errores.nombre && <small className="text-danger">{errores.nombre}</small>}
+          {errores.nombrecompleto && (
+            <small className="text-danger">{errores.nombrecompleto}</small>
+          )}
         </div>
 
         <div className="mb-3">
