@@ -51,18 +51,20 @@ function Mascotas() {
       )}
 
       {}
-      {!cargando && !errorPeticion && (
+     {!cargando && !errorPeticion && (
         <div className="row g-4">
-          {mascotas.length === 0 ? (
-            <div className="text-center col-12">
-              <p className="alert alert-warning">El backend respondió, pero no tienes ninguna mascota registrada en la base de datos.</p>
-            </div>
-          ) : (
+          {Array.isArray(mascotas) && mascotas.length > 0 ? (
             mascotas.map((mascota, index) => (
               <div className="col-md-4" key={mascota.id || index}>
                 <MascotaCard mascota={mascota} />
               </div>
             ))
+          ) : (
+            <div className="text-center col-12">
+              <p className="alert alert-warning">
+                El backend respondió, pero no hay mascotas para mostrar (o hubo un error de formato).
+              </p>
+            </div>
           )}
         </div>
       )}
