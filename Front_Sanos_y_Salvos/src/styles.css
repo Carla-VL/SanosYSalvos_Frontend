@@ -739,3 +739,142 @@ button,
     color: #008060 !important;
   }
 }
+
+/* =========================
+   ADOPCIÓN
+========================= */
+
+.adopcion-page {
+  min-height: 100vh;
+  padding: 48px 20px 70px;
+  background-color: #ffffff;
+}
+
+.adopcion-header {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 34px;
+}
+
+.seccion-subtitulo {
+  color: #008060;
+  font-family: "Quicksand", Arial, sans-serif;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.adopcion-header h1,
+.adopcion-page h1 {
+  color: #071d35;
+  font-size: 30px;
+  font-family: "Quicksand", Arial, sans-serif;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.adopcion-header p {
+  color: #1f2933;
+  line-height: 1.7;
+}
+
+.adopcion-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+.adopcion-card {
+  background-color: #ffffff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eef2f1;
+}
+
+.adopcion-imagen {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+}
+
+.adopcion-info {
+  padding: 20px;
+}
+
+.adopcion-titulo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.adopcion-titulo h2 {
+  color: #071d35;
+  font-size: 24px;
+  font-family: "Quicksand", Arial, sans-serif;
+  font-weight: 800;
+  margin: 0;
+}
+
+.adopcion-titulo span {
+  background-color: #eefbf6;
+  color: #008060;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.adopcion-info p {
+  color: #1f2933;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.adopcion-descripcion {
+  margin-top: 14px !important;
+  color: #475569 !important;
+}
+
+.btn-adopcion {
+  width: 100%;
+  margin-top: 16px;
+  border: none;
+  border-radius: 12px;
+  background-color: #008060;
+  color: #ffffff;
+  padding: 13px 16px;
+  font-family: "Quicksand", Arial, sans-serif;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn-adopcion:hover {
+  background-color: #006b50;
+}
+
+@media (min-width: 768px) {
+  .adopcion-page {
+    padding: 60px 8% 80px;
+  }
+
+  .adopcion-lista {
+    max-width: 1100px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 26px;
+  }
+
+  .adopcion-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .adopcion-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.12);
+  }
+}

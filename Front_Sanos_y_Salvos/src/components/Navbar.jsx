@@ -87,6 +87,14 @@ function Navbar({ setPagina, pagina }) {
           </button>
 
           <button
+            className={claseBoton("adopcion")}
+            type="button"
+            onClick={() => cambiarPagina("adopcion")}
+          >
+            Adopción
+          </button>
+
+          <button
             className={claseBoton("login")}
             type="button"
             onClick={() => cambiarPagina("login")}

@@ -9,7 +9,7 @@ import Reportes from "./pages/Reportes";
 import Login from "./pages/Login";
 import Registro from "./pages/Registro";
 import Mapa from "./pages/Mapa";
-
+import Adopcion from "./pages/Adopcion";
 
 function App() {
   const [pagina, setPagina] = useState("inicio");
@@ -49,6 +49,7 @@ function App() {
         {pagina === "login" && <Login setPagina={setPagina} />}
         {pagina === "registro" && <Registro setPagina={setPagina} />}
         {pagina === "mapa" && <Mapa />}
+        {pagina === "adopcion" && <Adopcion />}
       </main>
 
       <Footer />
