@@ -2,6 +2,8 @@ import { useState } from "react";
 
 function Navbar({ setPagina, pagina }) {
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const usuarioLogueado = !!localStorage.getItem("token");
+  
 
   function claseBoton(nombrePagina) {
     return pagina === nombrePagina
@@ -94,22 +96,34 @@ function Navbar({ setPagina, pagina }) {
             Adopción
           </button>
 
-          <button
-            className={claseBoton("login")}
-            type="button"
-            onClick={() => cambiarPagina("login")}
-          >
-            Iniciar sesión
-          </button>
+          {usuarioLogueado ? (
+            <button
+              className={claseBoton("perfil")}
+              type="button"
+              onClick={() => cambiarPagina("perfil")}
+            >
+              Perfil
+            </button>
+          ) : (
+            <>
+              <button
+                className={claseBoton("login")}
+                type="button"
+                onClick={() => cambiarPagina("login")}
+              >
+                Iniciar sesión
+              </button>
 
-          <button
-            className={claseBoton("registro")}
-            type="button"
-            onClick={() => cambiarPagina("registro")}
-          >
-            Registrarse
-          </button>
-        </div>
+              <button
+                className={claseBoton("registro")}
+                type="button"
+                onClick={() => cambiarPagina("registro")}
+              >
+                Registrarse
+              </button>
+            </>
+          )}
+          </div>
       </div>
     </nav>
   );

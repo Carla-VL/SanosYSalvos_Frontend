@@ -56,51 +56,63 @@ function Registro({ setPagina }) {
   }
 
 
-  async function manejarRegistro(evento) {
-    evento.preventDefault();
+async function manejarRegistro(evento) {
+  evento.preventDefault();
 
-    const validaciones = validarFormulario();
-    setErrores(validaciones);
-    setMensaje("");
+  const validaciones = validarFormulario();
+  setErrores(validaciones);
+  setMensaje("");
 
-    if (Object.keys(validaciones).length > 0) {
-      return;
-    }
-
-    setCargando(true);
-    console.log(" Enviando datos al microservicio de Usuarios");
-
-    try {
-      const datosParaEnviar = {
-        nombrecompleto: formulario.nombrecompleto,
-        email: formulario.correo,
-        username: formulario.correo, // Usamos el correo como username
-        password: formulario.password
-      };
-
-      const respuesta = await registrarUsuario(datosParaEnviar);
-      console.log(" Servidor respondió:", respuesta);
-
-      setMensaje("¡Cuenta creada con éxito! Llevándote al inicio de sesión...");
-
-      setFormulario({
-        nombrecompleto: "",
-        correo: "",
-        password: "",
-        confirmarPassword: "",
-      });
-
-      setTimeout(() => {
-        setPagina("login");
-      }, 2000);
-
-    } catch (error) {
-      console.error("❌ Error en el Registro:", error);
-      setErrores({ global: "No se pudo crear la cuenta. Revisa si el microservicio (8083) está arriba." });
-    } finally {
-      setCargando(false);
-    }
+  if (Object.keys(validaciones).length > 0) {
+    return;
   }
+
+  setCargando(true);
+  console.log(" Enviando datos al microservicio de Usuarios");
+
+  try {
+    const datosParaEnviar = {
+      nombrecompleto: formulario.nombrecompleto,
+      email: formulario.correo,
+      username: formulario.correo,
+      password: formulario.password,
+    };
+
+    const respuesta = await registrarUsuario(datosParaEnviar);
+    console.log(" Servidor respondió:", respuesta);
+
+    localStorage.setItem("token", respuesta?.token || "token-temporal-registro");
+
+    localStorage.setItem(
+      "usuario",
+      JSON.stringify({
+        nombre: respuesta?.nombrecompleto || formulario.nombrecompleto,
+        correo: respuesta?.email || formulario.correo,
+      })
+    );
+
+    setMensaje("¡Cuenta creada con éxito! Llevándote al inicio de sesión...");
+
+    setFormulario({
+      nombrecompleto: "",
+      correo: "",
+      password: "",
+      confirmarPassword: "",
+    });
+
+    setTimeout(() => {
+      setPagina("login");
+    }, 2000);
+  } catch (error) {
+    console.error("❌ Error en el Registro:", error);
+    setErrores({
+      global:
+        "No se pudo crear la cuenta. Revisa si el microservicio (8083) está arriba.",
+    });
+  } finally {
+    setCargando(false);
+  }
+}
 
   return (
   

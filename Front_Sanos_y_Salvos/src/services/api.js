@@ -90,3 +90,58 @@ export async function obtenerMascotasAdopcion() {
     },
   ];
 }
+
+
+// =========================
+// PERFIL / SESIÓN TEMPORAL
+// =========================
+
+export function obtenerUsuarioActual() {
+  const usuario = localStorage.getItem("usuario");
+  return usuario ? JSON.parse(usuario) : null;
+}
+
+export function existeSesionActiva() {
+  return !!localStorage.getItem("token");
+}
+
+export function cerrarSesionUsuario() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("usuario");
+}
+
+// =========================
+// MIS MASCOTAS TEMPORAL
+// =========================
+
+export async function obtenerMisMascotas() {
+  const mascotas = localStorage.getItem("misMascotas");
+  return mascotas ? JSON.parse(mascotas) : [];
+}
+
+export async function agregarMiMascota(mascota) {
+  const mascotas = await obtenerMisMascotas();
+
+  const nuevaMascota = {
+    id: Date.now(),
+    ...mascota,
+  };
+
+  const mascotasActualizadas = [...mascotas, nuevaMascota];
+
+  localStorage.setItem("misMascotas", JSON.stringify(mascotasActualizadas));
+
+  return nuevaMascota;
+}
+
+export async function eliminarMiMascota(id) {
+  const mascotas = await obtenerMisMascotas();
+
+  const mascotasActualizadas = mascotas.filter(
+    (mascota) => mascota.id !== id
+  );
+
+  localStorage.setItem("misMascotas", JSON.stringify(mascotasActualizadas));
+
+  return true;
+}

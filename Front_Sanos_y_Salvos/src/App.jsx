@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Registro from "./pages/Registro";
 import Mapa from "./pages/Mapa";
 import Adopcion from "./pages/Adopcion";
+import Perfil from "./pages/Perfil";
 
 function App() {
   const [pagina, setPagina] = useState("inicio");
@@ -50,6 +51,7 @@ function App() {
         {pagina === "registro" && <Registro setPagina={setPagina} />}
         {pagina === "mapa" && <Mapa />}
         {pagina === "adopcion" && <Adopcion />}
+        {pagina === "perfil" && <Perfil setPagina={setPagina} />}
       </main>
 
       <Footer />
