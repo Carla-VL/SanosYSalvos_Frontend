@@ -52,6 +52,13 @@ function Login({ setPagina }) {
       const token = data?.token || data?.jwt || data?.accessToken;
 
       if (token) {
+        const rol =
+          data?.rol ||
+          data?.role ||
+          data?.usuario?.rol ||
+          data?.usuario?.role ||
+          "USER";
+
         localStorage.setItem("token", token);
 
         localStorage.setItem(
@@ -69,13 +76,22 @@ function Login({ setPagina }) {
               data?.usuario?.correo ||
               data?.usuario?.email ||
               formulario.correo,
+            rol: rol,
           })
         );
 
-        setMensaje("¡Acceso concedido! Entrando a tu perfil...");
+        setMensaje(
+          rol === "ADMIN"
+            ? "¡Acceso concedido! Entrando al dashboard..."
+            : "¡Acceso concedido! Entrando a tu perfil..."
+        );
 
         setTimeout(() => {
-          setPagina("perfil");
+          if (rol === "ADMIN") {
+            setPagina("dashboard");
+          } else {
+            setPagina("perfil");
+          }
 
           window.scrollTo({
             top: 0,
@@ -145,9 +161,7 @@ function Login({ setPagina }) {
         </div>
 
         {errores.global && (
-          <div className="alert alert-danger p-2 mb-3">
-            {errores.global}
-          </div>
+          <div className="alert alert-danger p-2 mb-3">{errores.global}</div>
         )}
 
         <button
