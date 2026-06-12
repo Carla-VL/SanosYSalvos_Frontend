@@ -88,17 +88,13 @@ function Login({ setPagina }) {
         );
 
         setTimeout(() => {
-          if (rol === "ADMIN") {
-            setPagina("dashboard");
-          } else {
-            setPagina("perfil");
-          }
+         setPagina("perfil");
 
-          window.scrollTo({
-            top: 0,
-            behavior: "smooth",
+         window.scrollTo({
+          top: 0,
+          behavior: "smooth",
           });
-        }, 1000);
+}, 1000);
       } else {
         setErrores({
           global: data?.mensaje || "Correo o contraseña incorrectos.",

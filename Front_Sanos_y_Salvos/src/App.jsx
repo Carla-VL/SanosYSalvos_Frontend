@@ -11,7 +11,7 @@ import Registro from "./pages/Registro";
 import Mapa from "./pages/Mapa";
 import Adopcion from "./pages/Adopcion";
 import Perfil from "./pages/Perfil";
-import Dashboard from "./pages/Dashboard";
+
 
 function App() {
   const [pagina, setPagina] = useState("inicio");
@@ -53,7 +53,6 @@ function App() {
         {pagina === "mapa" && <Mapa />}
         {pagina === "adopcion" && <Adopcion />}
         {pagina === "perfil" && <Perfil setPagina={setPagina} />}
-        {pagina === "dashboard" && <Dashboard setPagina={setPagina} />}
       </main>
 
       <Footer />

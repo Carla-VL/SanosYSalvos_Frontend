@@ -18,6 +18,8 @@ function Perfil({ setPagina }) {
     descripcion: "",
   });
 
+  const DASHBOARD_ADMIN_URL = "http://localhost:3000/index.html"; 
+
   useEffect(() => {
     const usuarioGuardado = obtenerUsuarioActual();
     setUsuario(usuarioGuardado);
@@ -80,6 +82,10 @@ function Perfil({ setPagina }) {
     }, 50);
   }
 
+  function irAlDashboardAdmin() {
+    window.location.href = DASHBOARD_ADMIN_URL;
+  }
+
   if (!usuario) {
     return (
       <section className="perfil-page">
@@ -100,10 +106,16 @@ function Perfil({ setPagina }) {
     );
   }
 
+  const rolUsuario = (usuario.rol || "USER").toUpperCase();
+  const esAdmin = rolUsuario === "ADMIN";
+
   return (
     <section className="perfil-page">
       <div className="perfil-card">
-        <p className="seccion-subtitulo">Mi cuenta</p>
+        <p className="seccion-subtitulo">
+          {esAdmin ? "Cuenta administrador" : "Mi cuenta"}
+        </p>
+
         <h1>Mi perfil</h1>
 
         <div className="perfil-datos">
@@ -114,7 +126,22 @@ function Perfil({ setPagina }) {
           <p>
             <strong>Correo:</strong> {usuario.correo || "No registrado"}
           </p>
+
+          <p>
+            <strong>Rol:</strong>{" "}
+            {esAdmin ? "Administrador" : "Usuario"}
+          </p>
         </div>
+
+        {esAdmin && (
+          <button
+            className="perfil-boton"
+            type="button"
+            onClick={irAlDashboardAdmin}
+          >
+            Ir al dashboard administrativo
+          </button>
+        )}
 
         <button
           className="perfil-boton perfil-boton-secundario"

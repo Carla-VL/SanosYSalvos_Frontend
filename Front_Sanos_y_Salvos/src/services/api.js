@@ -32,9 +32,26 @@ export async function login(username, password) {
         body: JSON.stringify({ username, password }),
     });
     const data = await respuesta.json();
-    if (data.token) {
+    
+    if (data.success && data.token) {
+       
         localStorage.setItem("token", data.token); 
+        
+        localStorage.setItem("usuario", JSON.stringify({
+            correo: username,
+            rol: data.rol
+        }));
+        
+        // 3. Redirección según el rango
+        if (data.rol === 'ADMIN') {
+           
+            window.location.href = 'http://localhost:3000/index.html'; 
+        } else {
+           
+            window.location.href = '/perfil'; 
+        }
     }
+    
     return data;
 }
 
@@ -92,10 +109,6 @@ export async function obtenerMascotasAdopcion() {
 }
 
 
-// =========================
-// PERFIL / SESIÓN TEMPORAL
-// =========================
-
 export function obtenerUsuarioActual() {
   const usuario = localStorage.getItem("usuario");
   return usuario ? JSON.parse(usuario) : null;
@@ -110,9 +123,6 @@ export function cerrarSesionUsuario() {
   localStorage.removeItem("usuario");
 }
 
-// =========================
-// MIS MASCOTAS TEMPORAL
-// =========================
 
 export async function obtenerMisMascotas() {
   const mascotas = localStorage.getItem("misMascotas");
