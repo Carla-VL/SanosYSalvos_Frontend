@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { login } from "../services/api"; // Importamos tu función real
+import { login } from "../services/api";
 
 function Login({ setPagina }) {
   const [formulario, setFormulario] = useState({
@@ -20,12 +20,15 @@ function Login({ setPagina }) {
 
   function validarFormulario() {
     const nuevosErrores = {};
+
     if (!formulario.correo.trim()) {
       nuevosErrores.correo = "El correo es obligatorio.";
     }
+
     if (!formulario.password) {
       nuevosErrores.password = "La contraseña es obligatoria.";
     }
+
     return nuevosErrores;
   }
 
@@ -41,27 +44,68 @@ function Login({ setPagina }) {
     }
 
     setCargando(true);
-    console.log(" Enviando credenciales al microservicio de Auth (8081)...");
+    console.log("Enviando credenciales al microservicio de Auth...");
 
     try {
-     
       const data = await login(formulario.correo, formulario.password);
-      
-      if (data && data.token) {
-        setMensaje("¡Acceso concedido! Entrando a Sanos y Salvos... ");
-        
-        
-        setTimeout(() => {
-          setPagina("inicio"); 
-        }, 1500);
-      } else {
-       
-        setErrores({ global: "Correo o contraseña incorrectos." });
-      }
 
+      const token = data?.token || data?.jwt || data?.accessToken;
+
+      if (token) {
+        const rol = (
+          data?.rol ||
+          data?.role ||
+          data?.usuario?.rol ||
+          data?.usuario?.role ||
+          "USER"
+        ).toUpperCase();
+
+        localStorage.setItem("token", token);
+
+        localStorage.setItem(
+          "usuario",
+          JSON.stringify({
+            nombre:
+              data?.nombre ||
+              data?.nombrecompleto ||
+              data?.usuario?.nombre ||
+              data?.usuario?.nombrecompleto ||
+              formulario.correo.split("@")[0],
+            correo:
+              data?.correo ||
+              data?.email ||
+              data?.usuario?.correo ||
+              data?.usuario?.email ||
+              formulario.correo,
+            rol: rol,
+          })
+        );
+
+        setMensaje(
+          rol === "ADMIN"
+            ? "¡Acceso concedido! Entrando al dashboard..."
+            : "¡Acceso concedido! Entrando a tu perfil..."
+        );
+
+        setTimeout(() => {
+         setPagina("perfil");
+
+         window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+          });
+        }, 1000);
+      } else {
+        setErrores({
+          global: data?.mensaje || "Correo o contraseña incorrectos.",
+        });
+      }
     } catch (error) {
-      console.error(" Error conectando al Login:", error);
-      setErrores({ global: "El servidor de autenticación (8081) no responde." });
+      console.error("Error conectando al Login:", error);
+
+      setErrores({
+        global: "El servidor de autenticación no responde.",
+      });
     } finally {
       setCargando(false);
     }
@@ -74,9 +118,13 @@ function Login({ setPagina }) {
         <h1>Iniciar sesión</h1>
       </div>
 
-      <form className="card shadow-sm border-0 p-4 formulario-reporte" onSubmit={manejarLogin}>
+      <form
+        className="card shadow-sm border-0 p-4 formulario-reporte"
+        onSubmit={manejarLogin}
+      >
         <div className="mb-3">
           <label className="form-label">Correo electrónico</label>
+
           <input
             className="form-control"
             type="email"
@@ -86,11 +134,15 @@ function Login({ setPagina }) {
             placeholder="ejemplo@correo.com"
             disabled={cargando}
           />
-          {errores.correo && <small className="text-danger">{errores.correo}</small>}
+
+          {errores.correo && (
+            <small className="text-danger">{errores.correo}</small>
+          )}
         </div>
 
         <div className="mb-3">
           <label className="form-label">Contraseña</label>
+
           <input
             className="form-control"
             type="password"
@@ -99,12 +151,21 @@ function Login({ setPagina }) {
             onChange={manejarCambio}
             disabled={cargando}
           />
-          {errores.password && <small className="text-danger">{errores.password}</small>}
+
+          {errores.password && (
+            <small className="text-danger">{errores.password}</small>
+          )}
         </div>
 
-        {errores.global && <div className="alert alert-danger p-2 mb-3">{errores.global}</div>}
+        {errores.global && (
+          <div className="alert alert-danger p-2 mb-3">{errores.global}</div>
+        )}
 
-        <button className="btn btn-success w-100 mb-3" type="submit" disabled={cargando}>
+        <button
+          className="btn btn-success w-100 mb-3"
+          type="submit"
+          disabled={cargando}
+        >
           {cargando ? "Validando..." : "Iniciar sesión"}
         </button>
 
@@ -112,7 +173,12 @@ function Login({ setPagina }) {
 
         <p className="mt-3 mb-0 text-center">
           ¿No tienes cuenta?{" "}
-          <button type="button" className="btn btn-link p-0 text-success fw-bold" onClick={() => setPagina("registro")}>
+          <button
+            type="button"
+            className="btn btn-link p-0 text-success fw-bold"
+            onClick={() => setPagina("registro")}
+            disabled={cargando}
+          >
             Registrarse
           </button>
         </p>

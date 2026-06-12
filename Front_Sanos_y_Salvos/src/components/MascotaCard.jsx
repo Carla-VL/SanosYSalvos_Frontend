@@ -7,7 +7,8 @@ function MascotaCard({ mascota }) {
       ? "badge bg-warning text-dark estado-badge"
       : "badge bg-success estado-badge";
 
-  const imagenMascota = mascota.imagen || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=500";
+  // 📸 AQUÍ ESTÁ EL CAMBIO: Atrapamos la URL real desde la base de datos
+  const imagenMascota = mascota.foto || mascota.imagenUrl || mascota.imagen || "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=500";
 
   return (
     <div className="card h-100 shadow-sm border-0">
@@ -24,7 +25,6 @@ function MascotaCard({ mascota }) {
           <span className={claseEstado}>{estadoMascota}</span>
         </div>
 
-        {}
         <p className="card-text mb-1">
           <strong>Especie:</strong> {mascota.especie}
         </p>
@@ -33,12 +33,10 @@ function MascotaCard({ mascota }) {
           <strong>Raza:</strong> {mascota.raza}
         </p>
 
-        {}
         <p className="card-text mb-1">
           <strong>Edad:</strong> {mascota.edad ? `${mascota.edad} años` : "No especificada"}
         </p>
 
-        {}
         <p className="card-text mb-1">
           <strong>Vacunas:</strong> {mascota.vacunas}
         </p>
