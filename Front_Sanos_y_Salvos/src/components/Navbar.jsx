@@ -101,15 +101,7 @@ function Navbar({ setPagina, pagina }) {
 
           {usuarioLogueado ? (
             <>
-              {esAdmin && (
-                <button
-                  className={claseBoton("dashboard")}
-                  type="button"
-                  onClick={() => cambiarPagina("dashboard")}
-                >
-                  Dashboard
-                </button>
-              )}
+              
 
               <button
                 className={claseBoton("perfil")}

@@ -94,7 +94,7 @@ function Login({ setPagina }) {
           top: 0,
           behavior: "smooth",
           });
-}, 1000);
+        }, 1000);
       } else {
         setErrores({
           global: data?.mensaje || "Correo o contraseña incorrectos.",
