@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 function MapaMascotas() {
   const mapaContenedor = useRef(null);
