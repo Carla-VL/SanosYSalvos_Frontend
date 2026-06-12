@@ -52,12 +52,13 @@ function Login({ setPagina }) {
       const token = data?.token || data?.jwt || data?.accessToken;
 
       if (token) {
-        const rol =
+        const rol = (
           data?.rol ||
           data?.role ||
           data?.usuario?.rol ||
           data?.usuario?.role ||
-          "USER";
+          "USER"
+        ).toUpperCase();
 
         localStorage.setItem("token", token);
 
@@ -100,7 +101,7 @@ function Login({ setPagina }) {
         }, 1000);
       } else {
         setErrores({
-          global: "Correo o contraseña incorrectos.",
+          global: data?.mensaje || "Correo o contraseña incorrectos.",
         });
       }
     } catch (error) {
