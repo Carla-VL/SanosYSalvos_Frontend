@@ -1,7 +1,15 @@
-import { useState } from "react";
-import { crearReporte } from "../services/api"; 
+import { useEffect, useState } from "react";
+import { crearReporte } from "../services/api";
+
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 function Reportar() {
+  const [sugerenciasDireccion, setSugerenciasDireccion] = useState([]);
+  const [cargandoDirecciones, setCargandoDirecciones] = useState(false);
+  const [busquedaRealizada, setBusquedaRealizada] = useState(false);
+  const [direccionElegida, setDireccionElegida] = useState(false);
+  const [sessionToken] = useState(() => crypto.randomUUID());
+
   const [formulario, setFormulario] = useState({
     microchip: "",
     nombreAnimal: "",
@@ -21,12 +29,91 @@ function Reportar() {
   const [mensaje, setMensaje] = useState("");
   const [errores, setErrores] = useState({});
 
+  useEffect(() => {
+    const texto = formulario.ubicacion.trim();
+
+    if (direccionElegida) {
+      return;
+    }
+
+    if (texto.length < 3) {
+      setSugerenciasDireccion([]);
+      setBusquedaRealizada(false);
+      return;
+    }
+
+    if (!MAPBOX_TOKEN) {
+      console.error("Falta configurar VITE_MAPBOX_TOKEN en el archivo .env");
+      setSugerenciasDireccion([]);
+      setBusquedaRealizada(false);
+      return;
+    }
+
+    const temporizador = setTimeout(() => {
+      buscarDirecciones(texto);
+    }, 500);
+
+    return () => clearTimeout(temporizador);
+  }, [formulario.ubicacion, direccionElegida]);
+
+  const buscarDirecciones = async (texto) => {
+    try {
+      setCargandoDirecciones(true);
+      setBusquedaRealizada(false);
+
+      const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(
+        texto
+      )}&access_token=${MAPBOX_TOKEN}&session_token=${sessionToken}&country=CL&language=es&limit=6&types=address,street,place,locality,neighborhood&proximity=-70.6693,-33.4489`;
+
+      const respuesta = await fetch(url);
+      const data = await respuesta.json();
+
+      console.log("Respuesta Search Box Mapbox:", data);
+
+      if (data.suggestions && data.suggestions.length > 0) {
+        setSugerenciasDireccion(data.suggestions);
+      } else {
+        setSugerenciasDireccion([]);
+      }
+
+      setBusquedaRealizada(true);
+    } catch (error) {
+      console.error("Error buscando direcciones:", error);
+      setSugerenciasDireccion([]);
+      setBusquedaRealizada(true);
+    } finally {
+      setCargandoDirecciones(false);
+    }
+  };
+
   function manejarCambio(evento) {
+    const { name, value } = evento.target;
+
     setFormulario({
       ...formulario,
-      [evento.target.name]: evento.target.value,
+      [name]: value,
     });
+
+    if (name === "ubicacion") {
+      setDireccionElegida(false);
+    }
   }
+
+  function seleccionarDireccion(direccion) {
+    const direccionCompleta =
+      direccion.full_address ||
+      direccion.place_formatted ||
+      `${direccion.name || ""} ${direccion.place_formatted || ""}`.trim();
+
+    setFormulario({
+      ...formulario,
+      ubicacion: direccionCompleta,
+    });
+
+  setDireccionElegida(true);
+  setSugerenciasDireccion([]);
+  setBusquedaRealizada(false);
+}
 
   function validarFormulario() {
     const nuevosErrores = {};
@@ -34,33 +121,46 @@ function Reportar() {
     if (!formulario.nombreAnimal.trim()) {
       nuevosErrores.nombreAnimal = "El nombre del animal es obligatorio.";
     }
+
     if (!formulario.especie.trim()) {
       nuevosErrores.especie = "La especie es obligatoria.";
     }
+
     if (!formulario.raza.trim()) {
       nuevosErrores.raza = "La raza es obligatoria.";
     }
+
     if (!formulario.sexo) {
       nuevosErrores.sexo = "Debes seleccionar el sexo del animal.";
     }
+
     if (!formulario.estadoReproductivo) {
-      nuevosErrores.estadoReproductivo = "Debes seleccionar el estado reproductivo.";
+      nuevosErrores.estadoReproductivo =
+        "Debes seleccionar el estado reproductivo.";
     }
+
     if (!formulario.edadAproximada.trim()) {
       nuevosErrores.edadAproximada = "La edad aproximada es obligatoria.";
     }
+
     if (!formulario.colorPatron.trim()) {
       nuevosErrores.colorPatron = "Debes indicar color y patrón del animal.";
     }
+
     if (!formulario.tamanoPeso.trim()) {
-      nuevosErrores.tamanoPeso = "Debes indicar tamaño y peso aproximado del animal.";
+      nuevosErrores.tamanoPeso =
+        "Debes indicar tamaño y peso aproximado del animal.";
     }
+
     if (!formulario.caracteristicasEspeciales.trim()) {
-      nuevosErrores.caracteristicasEspeciales = "Debes agregar características físicas que ayuden a identificarlo.";
+      nuevosErrores.caracteristicasEspeciales =
+        "Debes agregar características físicas que ayuden a identificarlo.";
     }
+
     if (!formulario.ubicacion.trim()) {
       nuevosErrores.ubicacion = "La ubicación es obligatoria.";
     }
+
     if (!formulario.contacto.trim()) {
       nuevosErrores.contacto = "El contacto es obligatorio.";
     }
@@ -68,7 +168,7 @@ function Reportar() {
     return nuevosErrores;
   }
 
- async function manejarEnvio(evento) {
+  async function manejarEnvio(evento) {
     evento.preventDefault();
 
     const validaciones = validarFormulario();
@@ -81,19 +181,23 @@ function Reportar() {
 
     const payloadMascota = {
       ...formulario,
-      nombre: formulario.nombreAnimal, 
-      edad: parseInt(formulario.edadAproximada) || 0, 
-      vacunas: formulario.estadoReproductivo || "No especifica"
+      nombre: formulario.nombreAnimal,
+      edad: parseInt(formulario.edadAproximada) || 0,
+      vacunas: formulario.estadoReproductivo || "No especifica",
     };
 
     try {
       await crearReporte(payloadMascota, formulario.tipoReporte.toLowerCase());
-      
-      
+
       const nombreLimpio = formulario.nombreAnimal.trim().toLowerCase();
-      localStorage.setItem(`estado_${nombreLimpio}`, formulario.tipoReporte.toUpperCase());
-      
-      setMensaje("¡Reporte guardado con éxito! Puedes ir a la pestaña 'Reportes' para revisarlo. ");
+      localStorage.setItem(
+        `estado_${nombreLimpio}`,
+        formulario.tipoReporte.toUpperCase()
+      );
+
+      setMensaje(
+        "¡Reporte guardado con éxito! Puedes ir a la pestaña 'Reportes' para revisarlo."
+      );
 
       setFormulario({
         microchip: "",
@@ -111,9 +215,14 @@ function Reportar() {
         contacto: "",
       });
 
+      setSugerenciasDireccion([]);
+      setBusquedaRealizada(false);
+      setDireccionElegida(false);
     } catch (error) {
-      console.error(" Error en la petición:", error);
-      setMensaje("No se pudo conectar con el servidor. Revisa si el BFF está encendido.");
+      console.error("Error en la petición:", error);
+      setMensaje(
+        "No se pudo conectar con el servidor. Revisa si el BFF está encendido."
+      );
     }
   }
 
@@ -123,11 +232,15 @@ function Reportar() {
         <p className="text-success fw-bold">Nuevo reporte</p>
         <h1>Reportar mascota</h1>
         <p>
-          Completa los datos del animal para facilitar su identificación y apoyar la búsqueda.
+          Completa los datos del animal para facilitar su identificación y
+          apoyar la búsqueda.
         </p>
       </div>
 
-      <form className="card shadow-sm border-0 p-4 formulario-reporte" onSubmit={manejarEnvio}>
+      <form
+        className="card shadow-sm border-0 p-4 formulario-reporte"
+        onSubmit={manejarEnvio}
+      >
         <div className="row">
           <div className="col-md-6 mb-3">
             <label className="form-label">Registro de microchip</label>
@@ -151,7 +264,9 @@ function Reportar() {
               onChange={manejarCambio}
               placeholder="Ej: Luna, Toby"
             />
-            {errores.nombreAnimal && <small className="text-danger">{errores.nombreAnimal}</small>}
+            {errores.nombreAnimal && (
+              <small className="text-danger">{errores.nombreAnimal}</small>
+            )}
           </div>
 
           <div className="col-md-6 mb-3">
@@ -164,7 +279,9 @@ function Reportar() {
               onChange={manejarCambio}
               placeholder="Ej: perro, gato"
             />
-            {errores.especie && <small className="text-danger">{errores.especie}</small>}
+            {errores.especie && (
+              <small className="text-danger">{errores.especie}</small>
+            )}
           </div>
 
           <div className="col-md-6 mb-3">
@@ -177,33 +294,71 @@ function Reportar() {
               onChange={manejarCambio}
               placeholder="Ej: mestizo, poodle"
             />
-            {errores.raza && <small className="text-danger">{errores.raza}</small>}
+            {errores.raza && (
+              <small className="text-danger">{errores.raza}</small>
+            )}
           </div>
 
           <div className="col-md-6 mb-3">
             <label className="form-label d-block">Sexo</label>
             <div className="opciones-radio">
               <label className="opcion-radio">
-                <input type="radio" name="sexo" value="Macho" checked={formulario.sexo === "Macho"} onChange={manejarCambio} /> Macho
+                <input
+                  type="radio"
+                  name="sexo"
+                  value="Macho"
+                  checked={formulario.sexo === "Macho"}
+                  onChange={manejarCambio}
+                />{" "}
+                Macho
               </label>
+
               <label className="opcion-radio">
-                <input type="radio" name="sexo" value="Hembra" checked={formulario.sexo === "Hembra"} onChange={manejarCambio} /> Hembra
+                <input
+                  type="radio"
+                  name="sexo"
+                  value="Hembra"
+                  checked={formulario.sexo === "Hembra"}
+                  onChange={manejarCambio}
+                />{" "}
+                Hembra
               </label>
             </div>
-            {errores.sexo && <small className="text-danger">{errores.sexo}</small>}
+            {errores.sexo && (
+              <small className="text-danger">{errores.sexo}</small>
+            )}
           </div>
 
           <div className="col-md-6 mb-3">
             <label className="form-label d-block">Estado reproductivo</label>
             <div className="opciones-radio">
               <label className="opcion-radio">
-                <input type="radio" name="estadoReproductivo" value="Castrado" checked={formulario.estadoReproductivo === "Castrado"} onChange={manejarCambio} /> Castrado
+                <input
+                  type="radio"
+                  name="estadoReproductivo"
+                  value="Castrado"
+                  checked={formulario.estadoReproductivo === "Castrado"}
+                  onChange={manejarCambio}
+                />{" "}
+                Castrado
               </label>
+
               <label className="opcion-radio">
-                <input type="radio" name="estadoReproductivo" value="No castrado" checked={formulario.estadoReproductivo === "No castrado"} onChange={manejarCambio} /> No castrado
+                <input
+                  type="radio"
+                  name="estadoReproductivo"
+                  value="No castrado"
+                  checked={formulario.estadoReproductivo === "No castrado"}
+                  onChange={manejarCambio}
+                />{" "}
+                No castrado
               </label>
             </div>
-            {errores.estadoReproductivo && <small className="text-danger">{errores.estadoReproductivo}</small>}
+            {errores.estadoReproductivo && (
+              <small className="text-danger">
+                {errores.estadoReproductivo}
+              </small>
+            )}
           </div>
 
           <div className="col-md-6 mb-3">
@@ -216,12 +371,19 @@ function Reportar() {
               onChange={manejarCambio}
               placeholder="Ej: 2"
             />
-            {errores.edadAproximada && <small className="text-danger">{errores.edadAproximada}</small>}
+            {errores.edadAproximada && (
+              <small className="text-danger">{errores.edadAproximada}</small>
+            )}
           </div>
 
           <div className="col-md-6 mb-3">
             <label className="form-label">Tipo de reporte</label>
-            <select className="form-select" name="tipoReporte" value={formulario.tipoReporte} onChange={manejarCambio}>
+            <select
+              className="form-select"
+              name="tipoReporte"
+              value={formulario.tipoReporte}
+              onChange={manejarCambio}
+            >
               <option value="PERDIDA">Mascota perdida</option>
               <option value="ENCONTRADA">Mascota encontrada</option>
             </select>
@@ -237,7 +399,9 @@ function Reportar() {
               onChange={manejarCambio}
               placeholder="Ej: blanco negro"
             />
-            {errores.colorPatron && <small className="text-danger">{errores.colorPatron}</small>}
+            {errores.colorPatron && (
+              <small className="text-danger">{errores.colorPatron}</small>
+            )}
           </div>
 
           <div className="col-md-6 mb-3">
@@ -250,11 +414,15 @@ function Reportar() {
               onChange={manejarCambio}
               placeholder="Ej: mediano"
             />
-            {errores.tamanoPeso && <small className="text-danger">{errores.tamanoPeso}</small>}
+            {errores.tamanoPeso && (
+              <small className="text-danger">{errores.tamanoPeso}</small>
+            )}
           </div>
 
           <div className="col-12 mb-3">
-            <label className="form-label">Características físicas detalladas</label>
+            <label className="form-label">
+              Características físicas detalladas
+            </label>
             <textarea
               className="form-control"
               name="caracteristicasEspeciales"
@@ -263,20 +431,72 @@ function Reportar() {
               rows="4"
               placeholder="Detalles únicos..."
             />
-            {errores.caracteristicasEspeciales && <small className="text-danger">{errores.caracteristicasEspeciales}</small>}
+            {errores.caracteristicasEspeciales && (
+              <small className="text-danger">
+                {errores.caracteristicasEspeciales}
+              </small>
+            )}
           </div>
 
-          <div className="col-md-6 mb-3">
+          <div className="col-md-6 mb-3 position-relative">
             <label className="form-label">Ubicación</label>
+
             <input
               className="form-control"
               type="text"
               name="ubicacion"
               value={formulario.ubicacion}
               onChange={manejarCambio}
-              placeholder="Ej: Maipú"
+              placeholder="Ej: Av. Providencia 123, Santiago, Chile"
+              autoComplete="off"
             />
-            {errores.ubicacion && <small className="text-danger">{errores.ubicacion}</small>}
+
+            {cargandoDirecciones && (
+              <small className="text-muted">Buscando direcciones...</small>
+            )}
+
+            {!cargandoDirecciones &&
+              busquedaRealizada &&
+              formulario.ubicacion.trim().length >= 3 &&
+              sugerenciasDireccion.length === 0 && (
+                <small className="text-muted">
+                  No se encontraron sugerencias para esa dirección.
+                </small>
+              )}
+
+            {sugerenciasDireccion.length > 0 && (
+              <div
+                className="list-group position-absolute w-100 shadow"
+                style={{
+                  zIndex: 9999,
+                  maxHeight: "230px",
+                  overflowY: "auto",
+                  top: "75px",
+                  left: 0,
+                }}
+              >
+                {sugerenciasDireccion.map((direccion) => (
+                  <button
+                    type="button"
+                    key={direccion.mapbox_id}
+                    className="list-group-item list-group-item-action text-start"
+                    onClick={() => seleccionarDireccion(direccion)}
+                  >
+                    <strong>{direccion.name}</strong>
+                    <br />
+                    <small>
+                      {direccion.full_address ||
+                        direccion.place_formatted ||
+                        "Dirección sugerida"}
+                    </small>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {errores.ubicacion && (
+              <small className="text-danger">{errores.ubicacion}</small>
+            )}
           </div>
 
           <div className="col-md-6 mb-3">
@@ -289,7 +509,9 @@ function Reportar() {
               onChange={manejarCambio}
               placeholder="Teléfono o correo"
             />
-            {errores.contacto && <small className="text-danger">{errores.contacto}</small>}
+            {errores.contacto && (
+              <small className="text-danger">{errores.contacto}</small>
+            )}
           </div>
         </div>
 
