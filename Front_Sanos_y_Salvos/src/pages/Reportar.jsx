@@ -367,10 +367,10 @@ function Reportar() {
       setBusquedaRealizada(false);
       setDireccionElegida(false);
     } catch (error) {
-      console.error("Error en la petición:", error);
-      setMensaje(
-        "No se pudo conectar con el servidor. Revisa si el BFF o los microservicios están encendidos."
-      );
+      console.error("ERROR REAL AL GUARDAR:", error);
+      console.error("Mensaje del error:", error.message);
+
+      setMensaje(`Error: ${error.message}`);
     }
   }
 
