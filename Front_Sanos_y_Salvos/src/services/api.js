@@ -155,3 +155,29 @@ export async function eliminarMiMascota(id) {
 
   return true;
 }
+
+export async function registrarUbicacion(ubicacion) {
+  const respuesta = await fetch("http://localhost:8084/api/geo/registrar", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(ubicacion),
+  });
+
+  if (!respuesta.ok) {
+    throw new Error("Error al registrar la ubicación");
+  }
+
+  return await respuesta.json();
+}
+
+export async function listarUbicaciones() {
+  const respuesta = await fetch("http://localhost:8084/api/geo/listar");
+
+  if (!respuesta.ok) {
+    throw new Error("Error al listar ubicaciones");
+  }
+
+  return await respuesta.json();
+}

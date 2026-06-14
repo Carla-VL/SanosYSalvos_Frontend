@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { crearReporte } from "../services/api";
+import { crearReporte, registrarUbicacion } from "../services/api";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -22,6 +22,9 @@ function Reportar() {
     tamanoPeso: "",
     caracteristicasEspeciales: "",
     ubicacion: "",
+    latitud: "",
+    longitud: "",
+    comuna: "",
     tipoReporte: "PERDIDA",
     contacto: "",
   });
@@ -100,20 +103,25 @@ function Reportar() {
   }
 
   function seleccionarDireccion(direccion) {
-    const direccionCompleta =
-      direccion.full_address ||
-      direccion.place_formatted ||
-      `${direccion.name || ""} ${direccion.place_formatted || ""}`.trim();
+    const coordenadas = direccion.geometry?.coordinates;
+
+    const comuna =
+      direccion.context?.find((item) => item.id.includes("place"))?.text ||
+      direccion.context?.find((item) => item.id.includes("locality"))?.text ||
+      "Sin comuna";
 
     setFormulario({
       ...formulario,
-      ubicacion: direccionCompleta,
+      ubicacion: direccion.place_name,
+      longitud: coordenadas ? coordenadas[0] : "",
+      latitud: coordenadas ? coordenadas[1] : "",
+      comuna: comuna,
     });
 
-  setDireccionElegida(true);
-  setSugerenciasDireccion([]);
-  setBusquedaRealizada(false);
-}
+    setDireccionElegida(true);
+    setSugerenciasDireccion([]);
+    setBusquedaRealizada(false);
+  }
 
   function validarFormulario() {
     const nuevosErrores = {};
@@ -187,7 +195,38 @@ function Reportar() {
     };
 
     try {
-      await crearReporte(payloadMascota, formulario.tipoReporte.toLowerCase());
+      const mascotaCreada = await crearReporte(
+        payloadMascota,
+        formulario.tipoReporte.toLowerCase()
+      );
+
+      console.log("Mascota creada:", mascotaCreada);
+
+      const mascotaId =
+        mascotaCreada?.id ||
+        mascotaCreada?.mascotaId ||
+        mascotaCreada?.data?.id ||
+        mascotaCreada?.data?.mascotaId;
+
+      if (mascotaId && formulario.latitud && formulario.longitud) {
+        await registrarUbicacion({
+          mascotaId: mascotaId,
+          latitud: Number(formulario.latitud),
+          longitud: Number(formulario.longitud),
+          comuna: formulario.comuna || "Sin comuna",
+          sectorReferencia: formulario.ubicacion,
+        });
+
+        console.log("Ubicación registrada correctamente en geolocalización");
+      } else {
+        console.warn("No se registró ubicación en geolocalización", {
+          mascotaId,
+          latitud: formulario.latitud,
+          longitud: formulario.longitud,
+          comuna: formulario.comuna,
+          ubicacion: formulario.ubicacion,
+        });
+      }
 
       const nombreLimpio = formulario.nombreAnimal.trim().toLowerCase();
       localStorage.setItem(
@@ -211,6 +250,9 @@ function Reportar() {
         tamanoPeso: "",
         caracteristicasEspeciales: "",
         ubicacion: "",
+        latitud: "",
+        longitud: "",
+        comuna: "",
         tipoReporte: "PERDIDA",
         contacto: "",
       });
@@ -221,11 +263,11 @@ function Reportar() {
     } catch (error) {
       console.error("Error en la petición:", error);
       setMensaje(
-        "No se pudo conectar con el servidor. Revisa si el BFF está encendido."
+        "No se pudo conectar con el servidor. Revisa si el BFF o los microservicios están encendidos."
       );
     }
   }
-
+  
   return (
     <section className="container py-5">
       <div className="text-center mb-5 seccion-encabezado">
