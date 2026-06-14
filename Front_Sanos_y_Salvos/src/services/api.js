@@ -186,3 +186,11 @@ export async function eliminarMiMascota(id) {
 
   return true;
 }
+
+export async function obtenerMascotasAdopcion() {
+  console.warn(
+    "obtenerMascotasAdopcion aún no está conectada a un microservicio real."
+  );
+
+  return [];
+}
