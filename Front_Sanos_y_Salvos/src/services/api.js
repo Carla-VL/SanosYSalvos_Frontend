@@ -57,6 +57,8 @@ export async function crearReporte(reporte, tipo) {
 // =======================
 
 export async function registrarUbicacion(ubicacion) {
+  console.log("Enviando ubicación a GEO:", ubicacion);
+
   const respuesta = await fetch(`${API_GEO}/registrar`, {
     method: "POST",
     headers: {
@@ -65,11 +67,16 @@ export async function registrarUbicacion(ubicacion) {
     body: JSON.stringify(ubicacion),
   });
 
+  const texto = await respuesta.text();
+
+  console.log("Respuesta GEO status:", respuesta.status);
+  console.log("Respuesta GEO texto:", texto);
+
   if (!respuesta.ok) {
-    throw new Error("Error al registrar la ubicación");
+    throw new Error(`Error al registrar ubicación. Status: ${respuesta.status}. Respuesta: ${texto}`);
   }
 
-  return await respuesta.json();
+  return texto ? JSON.parse(texto) : null;
 }
 
 export async function listarUbicaciones() {
