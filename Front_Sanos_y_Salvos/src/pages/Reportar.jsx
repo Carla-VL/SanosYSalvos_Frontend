@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { crearReporte, registrarUbicacion } from "../services/api";
+import { crearReporte, registrarUbicacion, obtenerMascotas } from "../services/api";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -35,9 +35,7 @@ function Reportar() {
   useEffect(() => {
     const texto = formulario.ubicacion.trim();
 
-    if (direccionElegida) {
-      return;
-    }
+    if (direccionElegida) return;
 
     if (texto.length < 3) {
       setSugerenciasDireccion([]);
@@ -127,13 +125,13 @@ function Reportar() {
         feature.properties?.context?.neighborhood?.name ||
         "Sin comuna";
 
-      setFormulario({
-        ...formulario,
+      setFormulario((prev) => ({
+        ...prev,
         ubicacion: direccionCompleta,
         longitud: coordenadas ? coordenadas[0] : "",
         latitud: coordenadas ? coordenadas[1] : "",
         comuna: comuna,
-      });
+      }));
 
       setDireccionElegida(true);
       setSugerenciasDireccion([]);
@@ -146,21 +144,24 @@ function Reportar() {
   function manejarCambio(evento) {
     const { name, value } = evento.target;
 
-    setFormulario({
-      ...formulario,
-      [name]: value,
-    });
-
     if (name === "ubicacion") {
       setDireccionElegida(false);
+
       setFormulario((prev) => ({
         ...prev,
-        [name]: value,
+        ubicacion: value,
         latitud: "",
         longitud: "",
         comuna: "",
       }));
+
+      return;
     }
+
+    setFormulario((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   }
 
   function validarFormulario() {
@@ -216,6 +217,67 @@ function Reportar() {
     return nuevosErrores;
   }
 
+  async function obtenerIdMascotaCreada(mascotaCreada) {
+    let mascotaId =
+      mascotaCreada?.id ||
+      mascotaCreada?.mascotaId ||
+      mascotaCreada?.idMascota ||
+      mascotaCreada?.data?.id ||
+      mascotaCreada?.data?.mascotaId ||
+      mascotaCreada?.data?.idMascota;
+
+    if (mascotaId) {
+      return mascotaId;
+    }
+
+    try {
+      const mascotas = await obtenerMascotas();
+
+      console.log("Lista de mascotas después de crear:", mascotas);
+
+      const listaMascotas = Array.isArray(mascotas)
+        ? mascotas
+        : mascotas?.data || mascotas?.content || [];
+
+      const nombreFormulario = formulario.nombreAnimal.trim().toLowerCase();
+      const ubicacionFormulario = formulario.ubicacion.trim().toLowerCase();
+
+      const mascotaEncontrada = [...listaMascotas]
+        .reverse()
+        .find((mascota) => {
+          const nombreMascota = (mascota.nombre || mascota.nombreAnimal || "")
+            .trim()
+            .toLowerCase();
+
+          const ubicacionMascota = (mascota.ubicacion || "")
+            .trim()
+            .toLowerCase();
+
+          return (
+            nombreMascota === nombreFormulario &&
+            ubicacionMascota === ubicacionFormulario
+          );
+        });
+
+      if (!mascotaEncontrada) {
+        console.warn("No se encontró la mascota recién creada en la lista.");
+        return null;
+      }
+
+      mascotaId =
+        mascotaEncontrada.id ||
+        mascotaEncontrada.mascotaId ||
+        mascotaEncontrada.idMascota;
+
+      console.log("ID encontrado desde la lista:", mascotaId);
+
+      return mascotaId || null;
+    } catch (error) {
+      console.error("Error buscando el ID de la mascota creada:", error);
+      return null;
+    }
+  }
+
   async function manejarEnvio(evento) {
     evento.preventDefault();
 
@@ -242,15 +304,19 @@ function Reportar() {
 
       console.log("Mascota creada:", mascotaCreada);
 
-      const mascotaId =
-        mascotaCreada?.id ||
-        mascotaCreada?.mascotaId ||
-        mascotaCreada?.data?.id ||
-        mascotaCreada?.data?.mascotaId;
+      const mascotaId = await obtenerIdMascotaCreada(mascotaCreada);
+
+      console.log("Mascota ID final:", mascotaId);
+      console.log("Datos ubicación antes de registrar:", {
+        latitud: formulario.latitud,
+        longitud: formulario.longitud,
+        comuna: formulario.comuna,
+        ubicacion: formulario.ubicacion,
+      });
 
       if (mascotaId && formulario.latitud && formulario.longitud) {
         await registrarUbicacion({
-          mascotaId: mascotaId,
+          mascotaId: Number(mascotaId),
           latitud: Number(formulario.latitud),
           longitud: Number(formulario.longitud),
           comuna: formulario.comuna || "Sin comuna",
