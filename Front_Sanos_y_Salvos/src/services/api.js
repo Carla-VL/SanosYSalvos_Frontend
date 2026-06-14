@@ -40,11 +40,16 @@ export async function crearReporte(reporte, tipo) {
     body: JSON.stringify(reporte),
   });
 
+  const texto = await respuesta.text();
+
+  console.log("Respuesta crearReporte status:", respuesta.status);
+  console.log("Respuesta crearReporte texto:", texto);
+
   if (!respuesta.ok) {
-    throw new Error("Error al crear el reporte");
+    throw new Error(`Error al crear el reporte. Status: ${respuesta.status}. Respuesta: ${texto}`);
   }
 
-  return await respuesta.json();
+  return texto ? JSON.parse(texto) : null;
 }
 
 // =======================
