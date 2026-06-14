@@ -59,7 +59,7 @@ function Reportar() {
     return () => clearTimeout(temporizador);
   }, [formulario.ubicacion, direccionElegida]);
 
-  const buscarDirecciones = async (texto) => {
+  async function buscarDirecciones(texto) {
     try {
       setCargandoDirecciones(true);
       setBusquedaRealizada(false);
@@ -87,7 +87,61 @@ function Reportar() {
     } finally {
       setCargandoDirecciones(false);
     }
-  };
+  }
+
+  async function seleccionarDireccion(direccion) {
+    try {
+      if (!direccion?.mapbox_id) {
+        console.warn("La dirección no tiene mapbox_id:", direccion);
+        return;
+      }
+
+      const url = `https://api.mapbox.com/search/searchbox/v1/retrieve/${direccion.mapbox_id}?access_token=${MAPBOX_TOKEN}&session_token=${sessionToken}`;
+
+      const respuesta = await fetch(url);
+      const data = await respuesta.json();
+
+      console.log("Dirección seleccionada:", data);
+
+      const feature = data.features?.[0];
+
+      if (!feature) {
+        console.warn("No se pudo recuperar la dirección seleccionada");
+        return;
+      }
+
+      const coordenadas = feature.geometry?.coordinates;
+
+      const direccionCompleta =
+        feature.properties?.full_address ||
+        `${feature.properties?.name || ""}, ${
+          feature.properties?.place_formatted || ""
+        }`.trim() ||
+        direccion.full_address ||
+        direccion.place_formatted ||
+        direccion.name;
+
+      const comuna =
+        feature.properties?.context?.place?.name ||
+        feature.properties?.context?.locality?.name ||
+        feature.properties?.context?.neighborhood?.name ||
+        "Sin comuna";
+
+      setFormulario({
+        ...formulario,
+        ubicacion: direccionCompleta,
+        longitud: coordenadas ? coordenadas[0] : "",
+        latitud: coordenadas ? coordenadas[1] : "",
+        comuna: comuna,
+      });
+
+      setDireccionElegida(true);
+      setSugerenciasDireccion([]);
+      setBusquedaRealizada(false);
+    } catch (error) {
+      console.error("Error seleccionando dirección:", error);
+    }
+  }
 
   function manejarCambio(evento) {
     const { name, value } = evento.target;
@@ -99,28 +153,14 @@ function Reportar() {
 
     if (name === "ubicacion") {
       setDireccionElegida(false);
+      setFormulario((prev) => ({
+        ...prev,
+        [name]: value,
+        latitud: "",
+        longitud: "",
+        comuna: "",
+      }));
     }
-  }
-
-  function seleccionarDireccion(direccion) {
-    const coordenadas = direccion.geometry?.coordinates;
-
-    const comuna =
-      direccion.context?.find((item) => item.id.includes("place"))?.text ||
-      direccion.context?.find((item) => item.id.includes("locality"))?.text ||
-      "Sin comuna";
-
-    setFormulario({
-      ...formulario,
-      ubicacion: direccion.place_name,
-      longitud: coordenadas ? coordenadas[0] : "",
-      latitud: coordenadas ? coordenadas[1] : "",
-      comuna: comuna,
-    });
-
-    setDireccionElegida(true);
-    setSugerenciasDireccion([]);
-    setBusquedaRealizada(false);
   }
 
   function validarFormulario() {
@@ -267,7 +307,7 @@ function Reportar() {
       );
     }
   }
-  
+
   return (
     <section className="container py-5">
       <div className="text-center mb-5 seccion-encabezado">
@@ -489,7 +529,7 @@ function Reportar() {
               name="ubicacion"
               value={formulario.ubicacion}
               onChange={manejarCambio}
-              placeholder="Ej: Av. Providencia 123, Santiago, Chile"
+              placeholder="Ej: Rivadavia 7580, Santiago"
               autoComplete="off"
             />
 
@@ -522,7 +562,10 @@ function Reportar() {
                     type="button"
                     key={direccion.mapbox_id}
                     className="list-group-item list-group-item-action text-start"
-                    onClick={() => seleccionarDireccion(direccion)}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      seleccionarDireccion(direccion);
+                    }}
                   >
                     <strong>{direccion.name}</strong>
                     <br />
