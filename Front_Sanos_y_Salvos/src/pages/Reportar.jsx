@@ -27,6 +27,7 @@ function Reportar() {
     comuna: "",
     tipoReporte: "PERDIDA",
     contacto: "",
+    foto: "",
   });
 
   const [mensaje, setMensaje] = useState("");
@@ -163,6 +164,29 @@ function Reportar() {
       [name]: value,
     }));
   }
+
+  function manejarFoto(evento) {
+  const archivo = evento.target.files[0];
+
+  if (!archivo) {
+    setFormulario((prev) => ({
+      ...prev,
+      foto: "",
+    }));
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onloadend = () => {
+    setFormulario((prev) => ({
+      ...prev,
+      foto: reader.result,
+    }));
+  };
+
+  reader.readAsDataURL(archivo);
+}
 
   function validarFormulario() {
     const nuevosErrores = {};
@@ -586,6 +610,7 @@ function Reportar() {
             )}
           </div>
 
+
           <div className="col-md-6 mb-3 position-relative">
             <label className="form-label">Ubicación</label>
 
@@ -664,6 +689,27 @@ function Reportar() {
               <small className="text-danger">{errores.contacto}</small>
             )}
           </div>
+        </div>
+
+        <div className="col-md-12 mb-3">
+          <label className="form-label">Foto de la mascota</label>
+
+          <input
+            className="form-control"
+            type="file"
+            accept="image/*"
+            onChange={manejarFoto}
+          />
+
+          {formulario.foto && (
+            <div className="mt-3">
+              <img
+                src={formulario.foto}
+                alt="Vista previa de la mascota"
+                className="preview-foto-mascota"
+              />
+            </div>
+          )}
         </div>
 
         <button className="btn btn-success" type="submit">
