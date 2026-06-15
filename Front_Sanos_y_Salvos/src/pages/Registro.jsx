@@ -7,6 +7,7 @@ function Registro({ setPagina }) {
     correo: "",
     password: "",
     confirmarPassword: "",
+    rol: "USER",
   });
 
   const [errores, setErrores] = useState({});
@@ -17,6 +18,13 @@ function Registro({ setPagina }) {
     setFormulario({
       ...formulario,
       [evento.target.name]: evento.target.value,
+    });
+  }
+
+  function seleccionarRol(rolSeleccionado) {
+    setFormulario({
+      ...formulario,
+      rol: rolSeleccionado,
     });
   }
 
@@ -52,6 +60,10 @@ function Registro({ setPagina }) {
       nuevosErrores.confirmarPassword = "Las contraseñas no coinciden.";
     }
 
+    if (!formulario.rol) {
+      nuevosErrores.rol = "Debes seleccionar un tipo de cuenta.";
+    }
+
     return nuevosErrores;
   }
 
@@ -74,6 +86,8 @@ function Registro({ setPagina }) {
         email: formulario.correo,
         username: formulario.correo,
         password: formulario.password,
+        rol: formulario.rol,
+        role: formulario.rol,
       };
 
       const respuesta = await registrarUsuario(datosParaEnviar);
@@ -86,6 +100,7 @@ function Registro({ setPagina }) {
         correo: "",
         password: "",
         confirmarPassword: "",
+        rol: "USER",
       });
 
       setTimeout(() => {
@@ -125,7 +140,43 @@ function Registro({ setPagina }) {
         onSubmit={manejarRegistro}
       >
         <div className="mb-3">
-          <label className="form-label">Nombre completo</label>
+          <label className="form-label">Tipo de cuenta</label>
+
+          <div className="tipo-cuenta-botones">
+            <button
+              type="button"
+              className={`btn-tipo-cuenta ${
+                formulario.rol === "USER" ? "activo" : ""
+              }`}
+              onClick={() => seleccionarRol("USER")}
+              disabled={cargando}
+            >
+              Usuario normal
+            </button>
+
+            <button
+              type="button"
+              className={`btn-tipo-cuenta ${
+                formulario.rol === "VETERINARIA" ? "activo" : ""
+              }`}
+              onClick={() => seleccionarRol("VETERINARIA")}
+              disabled={cargando}
+            >
+              Veterinaria
+            </button>
+          </div>
+
+          {errores.rol && (
+            <small className="text-danger">{errores.rol}</small>
+          )}
+        </div>
+
+        <div className="mb-3">
+          <label className="form-label">
+            {formulario.rol === "VETERINARIA"
+              ? "Nombre de la veterinaria"
+              : "Nombre completo"}
+          </label>
 
           <input
             className="form-control"
@@ -134,6 +185,11 @@ function Registro({ setPagina }) {
             value={formulario.nombrecompleto}
             onChange={manejarCambio}
             disabled={cargando}
+            placeholder={
+              formulario.rol === "VETERINARIA"
+                ? "Ej: Veterinaria San José"
+                : "Ej: Nombre Apellido"
+            }
           />
 
           {errores.nombrecompleto && (
@@ -193,6 +249,12 @@ function Registro({ setPagina }) {
             <small className="text-danger">{errores.confirmarPassword}</small>
           )}
         </div>
+
+        {formulario.rol === "VETERINARIA" && (
+          <div className="alert alert-info p-2 mb-3">
+            Esta cuenta tendrá acceso para agregar animales en adopción.
+          </div>
+        )}
 
         {errores.global && (
           <div className="alert alert-danger p-2 mb-3">{errores.global}</div>

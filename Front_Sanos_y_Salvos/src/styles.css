@@ -1174,6 +1174,10 @@ button,
   }
 }
 
+/* =========================
+   AGREGAR FOTO EN REPORTAR
+========================= */
+
 .preview-foto-mascota {
   width: 180px;
   height: 180px;
@@ -1201,4 +1205,44 @@ input[type="file"].form-control::file-selector-button {
 
 input[type="file"].form-control::file-selector-button:hover {
   background-color: #157347;
+}
+
+/* =========================
+   BOTONES REGRISTRO USUARIO Y VET
+========================= */
+
+.tipo-cuenta-botones {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.btn-tipo-cuenta {
+  flex: 1;
+  min-width: 180px;
+  padding: 12px 16px;
+  border: 1px solid #ced4da;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #212529;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-tipo-cuenta:hover {
+  border-color: #198754;
+  color: #198754;
+}
+
+.btn-tipo-cuenta.activo {
+  background-color: #198754;
+  color: #ffffff;
+  border-color: #198754;
+}
+
+.btn-tipo-cuenta:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
