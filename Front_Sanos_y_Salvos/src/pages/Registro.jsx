@@ -68,61 +68,64 @@ function Registro({ setPagina }) {
   }
 
   async function manejarRegistro(evento) {
-    evento.preventDefault();
+  evento.preventDefault();
 
-    const validaciones = validarFormulario();
-    setErrores(validaciones);
-    setMensaje("");
+  const validaciones = validarFormulario();
+  setErrores(validaciones);
+  setMensaje("");
 
-    if (Object.keys(validaciones).length > 0) {
-      return;
-    }
-
-    setCargando(true);
-
-    try {
-      const datosParaEnviar = {
-        nombrecompleto: formulario.nombrecompleto,
-        email: formulario.correo,
-        username: formulario.correo,
-        password: formulario.password,
-        rol: formulario.rol,
-        role: formulario.rol,
-      };
-
-      const respuesta = await registrarUsuario(datosParaEnviar);
-      console.log("Servidor respondió:", respuesta);
-
-      setMensaje("¡Cuenta creada con éxito! Ahora inicia sesión.");
-
-      setFormulario({
-        nombrecompleto: "",
-        correo: "",
-        password: "",
-        confirmarPassword: "",
-        rol: "USER",
-      });
-
-      setTimeout(() => {
-        setPagina("login");
-
-        window.scrollTo({
-          top: 0,
-          behavior: "smooth",
-        });
-      }, 1500);
-    } catch (error) {
-      console.error("Error en el registro:", error);
-
-      setErrores({
-        global:
-          error.message ||
-          "No se pudo crear la cuenta. Revisa si el microservicio de usuarios está activo.",
-      });
-    } finally {
-      setCargando(false);
-    }
+  if (Object.keys(validaciones).length > 0) {
+    return;
   }
+
+  setCargando(true);
+
+  try {
+    const usernameGenerado = formulario.correo
+  .split("@")[0]
+  .replace(/[^a-zA-Z0-9]/g, "");
+
+  const datosParaEnviar = {
+  username: usernameGenerado,
+  email: formulario.correo,
+  password: formulario.password,
+  nombreCompleto: formulario.nombrecompleto,
+  rol: formulario.rol,
+  };
+
+    const respuesta = await registrarUsuario(datosParaEnviar);
+    console.log("Servidor respondió:", respuesta);
+
+    setMensaje("¡Cuenta creada con éxito! Ahora inicia sesión.");
+
+    setFormulario({
+      nombrecompleto: "",
+      correo: "",
+      password: "",
+      confirmarPassword: "",
+      rol: "USER",
+    });
+
+    setTimeout(() => {
+      setPagina("login");
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }, 1500);
+  } catch (error) {
+    console.error("Error en el registro:", error);
+
+    setErrores({
+      global:
+        error.message ||
+        "No se pudo crear la cuenta. Revisa si el microservicio de usuarios está activo.",
+    });
+  } finally {
+    setCargando(false);
+  }
+}
 
   return (
     <section className="container py-5">

@@ -33,86 +33,90 @@ function Login({ setPagina }) {
   }
 
   async function manejarLogin(evento) {
-    evento.preventDefault();
+  evento.preventDefault();
 
-    const validaciones = validarFormulario();
-    setErrores(validaciones);
-    setMensaje("");
+  const validaciones = validarFormulario();
+  setErrores(validaciones);
+  setMensaje("");
 
-    if (Object.keys(validaciones).length > 0) {
-      return;
-    }
-
-    setCargando(true);
-    console.log("Enviando credenciales al microservicio de Auth...");
-
-    try {
-      const data = await login(formulario.correo, formulario.password);
-
-      const token = data?.token || data?.jwt || data?.accessToken;
-
-      if (token) {
-        const rol = (
-          data?.rol ||
-          data?.role ||
-          data?.usuario?.rol ||
-          data?.usuario?.role ||
-          "USER"
-        ).toUpperCase();
-
-        localStorage.setItem("token", token);
-        localStorage.setItem("rol", rol);
-
-        localStorage.setItem(
-          "usuario",
-          JSON.stringify({
-            nombre:
-              data?.nombre ||
-              data?.nombrecompleto ||
-              data?.usuario?.nombre ||
-              data?.usuario?.nombrecompleto ||
-              formulario.correo.split("@")[0],
-            correo:
-              data?.correo ||
-              data?.email ||
-              data?.usuario?.correo ||
-              data?.usuario?.email ||
-              formulario.correo,
-            rol: rol,
-          })
-        );
-
-        if (rol === "ADMIN") {
-          setMensaje("¡Acceso concedido! Entrando al dashboard...");
-        } else if (rol === "VETERINARIA") {
-          setMensaje("¡Acceso concedido! Entrando al perfil de veterinaria...");
-        } else {
-          setMensaje("¡Acceso concedido! Entrando a tu perfil...");
-        }
-
-        setTimeout(() => {
-          setPagina("perfil");
-
-          window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-          });
-        }, 1000);
-      } else {
-        setErrores({
-          global: data?.mensaje || "Correo o contraseña incorrectos.",
-        });
-      }
-    } catch (error) {
-      console.error("Error conectando al Login:", error);
-
-      setErrores({
-        global: "El servidor de autenticación no responde.",
-      });
-    } finally {
-      setCargando(false);
-    }
+  if (Object.keys(validaciones).length > 0) {
+    return;
   }
+
+  setCargando(true);
+  console.log("Enviando credenciales al microservicio de Auth...");
+
+  try {
+    const usernameGenerado = formulario.correo
+      .split("@")[0]
+      .replace(/[^a-zA-Z0-9]/g, "");
+
+    const data = await login(usernameGenerado, formulario.password);
+
+    const token = data?.token || data?.jwt || data?.accessToken;
+
+    if (token) {
+      const rol = (
+        data?.rol ||
+        data?.role ||
+        data?.usuario?.rol ||
+        data?.usuario?.role ||
+        "USER"
+      ).toUpperCase();
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("rol", rol);
+
+      localStorage.setItem(
+        "usuario",
+        JSON.stringify({
+          nombre:
+            data?.nombre ||
+            data?.nombrecompleto ||
+            data?.usuario?.nombre ||
+            data?.usuario?.nombrecompleto ||
+            formulario.correo.split("@")[0],
+          correo:
+            data?.correo ||
+            data?.email ||
+            data?.usuario?.correo ||
+            data?.usuario?.email ||
+            formulario.correo,
+          rol: rol,
+        })
+      );
+
+      if (rol === "ADMIN") {
+        setMensaje("¡Acceso concedido! Entrando al dashboard...");
+      } else if (rol === "VETERINARIO" || rol === "VETERINARIA") {
+        setMensaje("¡Acceso concedido! Entrando al perfil de veterinaria...");
+      } else {
+        setMensaje("¡Acceso concedido! Entrando a tu perfil...");
+      }
+
+      setTimeout(() => {
+        setPagina("perfil");
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }, 1000);
+    } else {
+      setErrores({
+        global: data?.mensaje || "Correo o contraseña incorrectos.",
+      });
+    }
+  } catch (error) {
+    console.error("Error conectando al Login:", error);
+
+    setErrores({
+      global: "Correo o contraseña incorrectos.",
+    });
+  } finally {
+    setCargando(false);
+  }
+}
 
   return (
     <section className="container py-5">

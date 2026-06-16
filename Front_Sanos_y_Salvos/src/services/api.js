@@ -121,16 +121,32 @@ export async function login(username, password) {
 // =======================
 
 export async function registrarUsuario(usuarioData) {
+  const correo = usuarioData.email || usuarioData.correo;
+
+  const usernameGenerado = correo
+    ? correo.split("@")[0].replace(/[^a-zA-Z0-9]/g, "")
+    : usuarioData.username;
+
+  const body = {
+    username: usuarioData.username || usernameGenerado,
+    password: usuarioData.password,
+    email: correo,
+    nombreCompleto:
+      usuarioData.nombreCompleto || usuarioData.nombrecompleto,
+    rol: usuarioData.rol || "USER",
+  };
+
   const respuesta = await fetch(`${API_USUARIOS}/registrar`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(usuarioData),
+    body: JSON.stringify(body),
   });
 
   if (!respuesta.ok) {
-    throw new Error("Error al registrar usuario");
+    const texto = await respuesta.text();
+    throw new Error(texto || "Error al registrar usuario");
   }
 
   return await respuesta.json();
