@@ -6,11 +6,14 @@ import {
   agregarMiMascota,
   eliminarMiMascota,
   registrarMascotaAdopcion,
+  obtenerMascotasAdopcionVeterinaria,
+  marcarMascotaAdoptada,
 } from "../services/api";
 
 function Perfil({ setPagina }) {
   const [usuario, setUsuario] = useState(null);
   const [mascotas, setMascotas] = useState([]);
+  const [mascotasAdopcionVet, setMascotasAdopcionVet] = useState([]);
 
   const [formulario, setFormulario] = useState({
     nombre: "",
@@ -33,18 +36,46 @@ function Perfil({ setPagina }) {
 
   const [mensajeAdopcion, setMensajeAdopcion] = useState("");
   const [cargandoAdopcion, setCargandoAdopcion] = useState(false);
+  const [cargandoListadoVet, setCargandoListadoVet] = useState(false);
 
   const DASHBOARD_ADMIN_URL = "http://localhost:3000/index.html";
 
   useEffect(() => {
     const usuarioGuardado = obtenerUsuarioActual();
     setUsuario(usuarioGuardado);
+
     cargarMascotas();
+
+    const rolLocalStorage = localStorage.getItem("rol");
+    const rolUsuario = (
+      usuarioGuardado?.rol ||
+      rolLocalStorage ||
+      "USER"
+    ).toUpperCase();
+
+    if (rolUsuario === "VETERINARIA" && usuarioGuardado?.correo) {
+      cargarMascotasAdopcionVeterinaria(usuarioGuardado.correo);
+    }
   }, []);
 
   async function cargarMascotas() {
     const datos = await obtenerMisMascotas();
     setMascotas(datos);
+  }
+
+  async function cargarMascotasAdopcionVeterinaria(correoVeterinaria) {
+    try {
+      setCargandoListadoVet(true);
+      const datos = await obtenerMascotasAdopcionVeterinaria(correoVeterinaria);
+      setMascotasAdopcionVet(datos);
+    } catch (error) {
+      console.error(
+        "Error cargando mascotas en adopción de la veterinaria:",
+        error
+      );
+    } finally {
+      setCargandoListadoVet(false);
+    }
   }
 
   function manejarCambio(evento) {
@@ -150,11 +181,36 @@ function Perfil({ setPagina }) {
       setMensajeAdopcion(
         "Mascota registrada correctamente en el apartado de adopción."
       );
+
+      if (usuario?.correo) {
+        await cargarMascotasAdopcionVeterinaria(usuario.correo);
+      }
     } catch (error) {
       console.error("Error registrando mascota en adopción:", error);
       alert("No se pudo registrar la mascota en adopción.");
     } finally {
       setCargandoAdopcion(false);
+    }
+  }
+
+  async function manejarMarcarAdoptada(id) {
+    const confirmar = confirm("¿Confirmas que esta mascota ya fue adoptada?");
+
+    if (!confirmar) {
+      return;
+    }
+
+    try {
+      await marcarMascotaAdoptada(id);
+
+      if (usuario?.correo) {
+        await cargarMascotasAdopcionVeterinaria(usuario.correo);
+      }
+
+      alert("Mascota marcada como adoptada.");
+    } catch (error) {
+      console.error("Error marcando mascota como adoptada:", error);
+      alert("No se pudo marcar la mascota como adoptada.");
     }
   }
 
@@ -378,106 +434,159 @@ function Perfil({ setPagina }) {
           {mensajeAdopcion && (
             <div className="alert alert-success mt-3">{mensajeAdopcion}</div>
           )}
+
+          <div className="mis-mascotas-lista mt-4">
+            <h3>Mascotas que tengo en adopción</h3>
+
+            {cargandoListadoVet ? (
+              <p className="perfil-texto">Cargando mascotas publicadas...</p>
+            ) : mascotasAdopcionVet.length === 0 ? (
+              <p className="perfil-texto">
+                Aún no tienes mascotas publicadas en adopción.
+              </p>
+            ) : (
+              mascotasAdopcionVet.map((mascota) => (
+                <article className="mi-mascota-card" key={mascota.id}>
+                  <div>
+                    <h3>{mascota.nombre}</h3>
+
+                    <p>
+                      <strong>Especie:</strong>{" "}
+                      {mascota.especie || "No especificada"}
+                    </p>
+
+                    <p>
+                      <strong>Raza:</strong>{" "}
+                      {mascota.raza || "No especificada"}
+                    </p>
+
+                    <p>
+                      <strong>Edad:</strong>{" "}
+                      {mascota.edad || "No especificada"}
+                    </p>
+
+                    <p>
+                      <strong>Estado:</strong>{" "}
+                      {mascota.estado || "DISPONIBLE"}
+                    </p>
+
+                    {mascota.descripcion && (
+                      <p className="perfil-texto">{mascota.descripcion}</p>
+                    )}
+                  </div>
+
+                  <button
+                    className="perfil-boton-eliminar"
+                    type="button"
+                    onClick={() => manejarMarcarAdoptada(mascota.id)}
+                  >
+                    Marcar adoptada
+                  </button>
+                </article>
+              ))
+            )}
+          </div>
         </div>
       )}
+
       {!esVeterinaria && (
-      <div className="perfil-card">
-        <p className="seccion-subtitulo">Mascotas registradas</p>
-        <h2>Mis mascotas</h2>
+        <div className="perfil-card">
+          <p className="seccion-subtitulo">Mascotas registradas</p>
+          <h2>Mis mascotas</h2>
 
-        <p className="perfil-texto">
-          Aquí puedes registrar tus mascotas para tenerlas asociadas a tu perfil.
-          Más adelante esta información podrá conectarse con el BFF y la base de
-          datos.
-        </p>
+          <p className="perfil-texto">
+            Aquí puedes registrar tus mascotas para tenerlas asociadas a tu
+            perfil. Más adelante esta información podrá conectarse con el BFF y
+            la base de datos.
+          </p>
 
-        <form className="perfil-formulario" onSubmit={manejarAgregarMascota}>
-          <input
-            type="text"
-            name="nombre"
-            placeholder="Nombre de la mascota"
-            value={formulario.nombre}
-            onChange={manejarCambio}
-          />
+          <form className="perfil-formulario" onSubmit={manejarAgregarMascota}>
+            <input
+              type="text"
+              name="nombre"
+              placeholder="Nombre de la mascota"
+              value={formulario.nombre}
+              onChange={manejarCambio}
+            />
 
-          <input
-            type="text"
-            name="tipo"
-            placeholder="Tipo: perro, gato, etc."
-            value={formulario.tipo}
-            onChange={manejarCambio}
-          />
+            <input
+              type="text"
+              name="tipo"
+              placeholder="Tipo: perro, gato, etc."
+              value={formulario.tipo}
+              onChange={manejarCambio}
+            />
 
-          <input
-            type="text"
-            name="raza"
-            placeholder="Raza o mestizo"
-            value={formulario.raza}
-            onChange={manejarCambio}
-          />
+            <input
+              type="text"
+              name="raza"
+              placeholder="Raza o mestizo"
+              value={formulario.raza}
+              onChange={manejarCambio}
+            />
 
-          <input
-            type="text"
-            name="edad"
-            placeholder="Edad aproximada"
-            value={formulario.edad}
-            onChange={manejarCambio}
-          />
+            <input
+              type="text"
+              name="edad"
+              placeholder="Edad aproximada"
+              value={formulario.edad}
+              onChange={manejarCambio}
+            />
 
-          <textarea
-            name="descripcion"
-            placeholder="Descripción breve"
-            value={formulario.descripcion}
-            onChange={manejarCambio}
-          ></textarea>
+            <textarea
+              name="descripcion"
+              placeholder="Descripción breve"
+              value={formulario.descripcion}
+              onChange={manejarCambio}
+            ></textarea>
 
-          <button className="perfil-boton" type="submit">
-            Añadir mascota
-          </button>
-        </form>
+            <button className="perfil-boton" type="submit">
+              Añadir mascota
+            </button>
+          </form>
 
-        <div className="mis-mascotas-lista">
-          {mascotas.length === 0 ? (
-            <p className="perfil-texto">
-              Aún no tienes mascotas registradas en tu perfil.
-            </p>
-          ) : (
-            mascotas.map((mascota) => (
-              <article className="mi-mascota-card" key={mascota.id}>
-                <div>
-                  <h3>{mascota.nombre}</h3>
+          <div className="mis-mascotas-lista">
+            {mascotas.length === 0 ? (
+              <p className="perfil-texto">
+                Aún no tienes mascotas registradas en tu perfil.
+              </p>
+            ) : (
+              mascotas.map((mascota) => (
+                <article className="mi-mascota-card" key={mascota.id}>
+                  <div>
+                    <h3>{mascota.nombre}</h3>
 
-                  <p>
-                    <strong>Tipo:</strong> {mascota.tipo}
-                  </p>
+                    <p>
+                      <strong>Tipo:</strong> {mascota.tipo}
+                    </p>
 
-                  <p>
-                    <strong>Raza:</strong>{" "}
-                    {mascota.raza || "No especificada"}
-                  </p>
+                    <p>
+                      <strong>Raza:</strong>{" "}
+                      {mascota.raza || "No especificada"}
+                    </p>
 
-                  <p>
-                    <strong>Edad:</strong>{" "}
-                    {mascota.edad || "No especificada"}
-                  </p>
+                    <p>
+                      <strong>Edad:</strong>{" "}
+                      {mascota.edad || "No especificada"}
+                    </p>
 
-                  {mascota.descripcion && (
-                    <p className="perfil-texto">{mascota.descripcion}</p>
-                  )}
-                </div>
+                    {mascota.descripcion && (
+                      <p className="perfil-texto">{mascota.descripcion}</p>
+                    )}
+                  </div>
 
-                <button
-                  className="perfil-boton-eliminar"
-                  type="button"
-                  onClick={() => manejarEliminarMascota(mascota.id)}
-                >
-                  Quitar
-                </button>
-              </article>
-            ))
-          )}
+                  <button
+                    className="perfil-boton-eliminar"
+                    type="button"
+                    onClick={() => manejarEliminarMascota(mascota.id)}
+                  >
+                    Quitar
+                  </button>
+                </article>
+              ))
+            )}
+          </div>
         </div>
-      </div>
       )}
     </section>
   );
