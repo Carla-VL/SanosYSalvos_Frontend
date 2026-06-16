@@ -236,3 +236,30 @@ export async function registrarMascotaAdopcion(datosMascota) {
 export async function listarMascotasAdopcion() {
   return await obtenerMascotasAdopcion();
 }
+
+export async function obtenerMascotasAdopcionVeterinaria(contacto) {
+  const contactoCodificado = encodeURIComponent(contacto);
+
+  const respuesta = await fetch(
+    `${ADOPCION_API_URL}/veterinaria/${contactoCodificado}`
+  );
+
+  if (!respuesta.ok) {
+    throw new Error("No se pudieron cargar las mascotas de la veterinaria.");
+  }
+
+  return await respuesta.json();
+}
+
+export async function marcarMascotaAdoptada(id) {
+  const respuesta = await fetch(`${ADOPCION_API_URL}/${id}/adoptada`, {
+    method: "PUT",
+  });
+
+  if (!respuesta.ok) {
+    throw new Error("No se pudo marcar la mascota como adoptada.");
+  }
+
+  return await respuesta.json();
+}
+

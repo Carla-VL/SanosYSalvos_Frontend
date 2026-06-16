@@ -1310,3 +1310,67 @@ input[type="file"].form-control::file-selector-button:hover {
   font-weight: 700;
   margin-bottom: 10px;
 }
+
+/* =======================
+   PERFIL VETERINARIA / ADOPCIÓN
+======================= */
+
+.perfil-adopcion-card {
+  border-left: 5px solid #198754;
+}
+
+.perfil-adopcion-card h2 {
+  color: #198754;
+  font-weight: 700;
+}
+
+.perfil-adopcion-card textarea {
+  min-height: 110px;
+}
+
+.perfil-campo-foto {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.perfil-campo-foto label {
+  font-weight: 600;
+  color: #212529;
+}
+
+.perfil-campo-foto input[type="file"] {
+  padding: 10px;
+  border: 1px solid #dcdfe3;
+  border-radius: 8px;
+  background-color: #ffffff;
+}
+
+.preview-foto-mascota {
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  margin-top: 8px;
+}
+
+.perfil-adopcion-card .mis-mascotas-lista h3 {
+  margin-bottom: 16px;
+  color: #198754;
+  font-weight: 700;
+}
+
+.perfil-adopcion-card .mi-mascota-card {
+  border-left: 4px solid #198754;
+}
+
+.perfil-adopcion-card .perfil-boton-eliminar {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+.perfil-adopcion-card .perfil-boton-eliminar:hover {
+  background-color: #bb2d3b;
+}
