@@ -1,38 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
+import { listarUbicaciones } from "../services/api";
+
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
 function MapaMascotas() {
   const mapaContenedor = useRef(null);
   const mapa = useRef(null);
+  const marcadores = useRef([]);
+
   const [vistaMapa, setVistaMapa] = useState("calles");
+  const [ubicaciones, setUbicaciones] = useState([]);
+  const [mensaje, setMensaje] = useState("");
 
   const estilosMapa = {
     calles: "mapbox://styles/mapbox/streets-v12",
     satelite: "mapbox://styles/mapbox/satellite-streets-v12",
     relieve: "mapbox://styles/mapbox/outdoors-v12",
   };
-
-  const mascotasUbicaciones = [
-    {
-      nombre: "Luna",
-      estado: "Perdida",
-      ubicacion: "Maipú",
-      coordenadas: [-70.7654, -33.5107],
-    },
-    {
-      nombre: "Milo",
-      estado: "Encontrada",
-      ubicacion: "Santiago Centro",
-      coordenadas: [-70.6483, -33.4489],
-    },
-    {
-      nombre: "Toby",
-      estado: "Perdida",
-      ubicacion: "La Florida",
-      coordenadas: [-70.5982, -33.5227],
-    },
-  ];
 
   function agregarRelieve() {
     if (!mapa.current) return;
@@ -65,21 +50,54 @@ function MapaMascotas() {
     mapa.current.setFog(null);
   }
 
-  function agregarMarcadores() {
-    mascotasUbicaciones.forEach((mascota) => {
+  function limpiarMarcadores() {
+    marcadores.current.forEach((marcador) => marcador.remove());
+    marcadores.current = [];
+  }
+
+  function agregarMarcadores(listaUbicaciones) {
+    if (!mapa.current) return;
+
+    limpiarMarcadores();
+
+    listaUbicaciones.forEach((ubicacion) => {
+      if (!ubicacion.latitud || !ubicacion.longitud) return;
+
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
-        <strong>${mascota.nombre}</strong><br/>
-        Estado: ${mascota.estado}<br/>
-        Ubicación: ${mascota.ubicacion}
+        <strong>Mascota ID: ${ubicacion.mascotaId}</strong><br/>
+        Comuna: ${ubicacion.comuna || "Sin comuna"}<br/>
+        Referencia: ${ubicacion.sectorReferencia || "Sin referencia"}
       `);
 
-      new mapboxgl.Marker({
-        color: mascota.estado === "Perdida" ? "#ff6b35" : "#7c3aed",
+      const marcador = new mapboxgl.Marker({
+        color: "#ff6b35",
       })
-        .setLngLat(mascota.coordenadas)
+        .setLngLat([Number(ubicacion.longitud), Number(ubicacion.latitud)])
         .setPopup(popup)
         .addTo(mapa.current);
+
+      marcadores.current.push(marcador);
     });
+  }
+
+  async function cargarUbicaciones() {
+    try {
+      setMensaje("");
+
+      const data = await listarUbicaciones();
+
+      console.log("Ubicaciones recibidas desde geolocalización:", data);
+
+      setUbicaciones(data);
+      agregarMarcadores(data);
+
+      if (data.length === 0) {
+        setMensaje("No hay ubicaciones registradas todavía.");
+      }
+    } catch (error) {
+      console.error("Error cargando ubicaciones:", error);
+      setMensaje("No se pudieron cargar las ubicaciones desde geolocalización.");
+    }
   }
 
   function cambiarVista(tipoVista) {
@@ -100,6 +118,7 @@ function MapaMascotas() {
         quitarRelieve();
       }
 
+      agregarMarcadores(ubicaciones);
       mapa.current.resize();
     });
   }
@@ -109,6 +128,7 @@ function MapaMascotas() {
 
     if (!token) {
       console.error("Falta configurar VITE_MAPBOX_TOKEN en el archivo .env");
+      setMensaje("Falta configurar el token de Mapbox.");
       return;
     }
 
@@ -128,11 +148,13 @@ function MapaMascotas() {
     mapa.current.addControl(new mapboxgl.NavigationControl(), "top-right");
 
     mapa.current.on("load", () => {
-      agregarMarcadores();
+      cargarUbicaciones();
       mapa.current.resize();
     });
 
     return () => {
+      limpiarMarcadores();
+
       if (mapa.current) {
         mapa.current.remove();
         mapa.current = null;
@@ -146,8 +168,8 @@ function MapaMascotas() {
         <p className="text-success fw-bold">Mapa de reportes</p>
         <h1>Ubicación referencial de mascotas</h1>
         <p>
-          Este mapa muestra puntos referenciales de mascotas perdidas o
-          encontradas. Más adelante estos datos podrán venir desde el BFF.
+          Este mapa muestra las ubicaciones registradas desde el microservicio
+          de geolocalización.
         </p>
       </div>
 
@@ -190,14 +212,19 @@ function MapaMascotas() {
         <div className="mapa-leyenda">
           <span>
             <i className="punto-leyenda punto-perdida"></i>
-            Mascota perdida
+            Ubicación registrada
           </span>
 
-          <span>
-            <i className="punto-leyenda punto-encontrada"></i>
-            Mascota encontrada
+          <span className="text-muted">
+            Total ubicaciones: {ubicaciones.length}
           </span>
         </div>
+
+        {mensaje && (
+          <div className="alert alert-warning text-center mx-3">
+            {mensaje}
+          </div>
+        )}
 
         <div ref={mapaContenedor} className="mapa-contenedor"></div>
       </div>

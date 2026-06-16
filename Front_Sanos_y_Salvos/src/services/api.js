@@ -1,113 +1,153 @@
-const API_BFF = "http://localhost:8085/api/bff";           
-const API_LOGIN = "http://localhost:8082/api/auth";         
-const API_USUARIOS = "http://localhost:8083/api/usuarios";  
+const API_BFF = "http://localhost:8085/api/bff";
+const API_LOGIN = "http://localhost:8082/api/auth";
+const API_USUARIOS = "http://localhost:8083/api/usuarios";
+const API_GEO = "http://localhost:8084/api/geo";
+
+// =======================
+// MASCOTAS / REPORTES
+// =======================
 
 export async function obtenerMascotas() {
-    const respuesta = await fetch(`${API_BFF}/mascotas/listar`);
-    return respuesta.json();
+  const respuesta = await fetch(`${API_BFF}/mascotas/listar`);
+
+  if (!respuesta.ok) {
+    throw new Error("Error al obtener mascotas");
+  }
+
+  return await respuesta.json();
 }
 
 export async function obtenerReportes() {
-    const respuesta = await fetch(`${API_BFF}/mascotas/listar`);
-    return respuesta.json();
+  const respuesta = await fetch(`${API_BFF}/mascotas/listar`);
+
+  if (!respuesta.ok) {
+    throw new Error("Error al obtener reportes");
+  }
+
+  return await respuesta.json();
 }
 
 export async function crearReporte(reporte, tipo) {
-    const url = tipo ? `${API_BFF}/mascotas/reportar?tipo=${tipo}` : `${API_BFF}/mascotas/reportar`;
-    
-    const respuesta = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(reporte),
-    });
-    return respuesta.json();
+  const url = tipo
+    ? `${API_BFF}/mascotas/reportar?tipo=${tipo}`
+    : `${API_BFF}/mascotas/reportar`;
+
+  const respuesta = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(reporte),
+  });
+
+  const texto = await respuesta.text();
+
+  console.log("Respuesta crearReporte status:", respuesta.status);
+  console.log("Respuesta crearReporte texto:", texto);
+
+  if (!respuesta.ok) {
+    throw new Error(`Error al crear el reporte. Status: ${respuesta.status}. Respuesta: ${texto}`);
+  }
+
+  return texto ? JSON.parse(texto) : null;
 }
+
+// =======================
+// GEOLOCALIZACIÓN
+// =======================
+
+export async function registrarUbicacion(ubicacion) {
+  console.log("Enviando ubicación a GEO:", ubicacion);
+
+  const respuesta = await fetch(`${API_GEO}/registrar`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(ubicacion),
+  });
+
+  const texto = await respuesta.text();
+
+  console.log("Respuesta GEO status:", respuesta.status);
+  console.log("Respuesta GEO texto:", texto);
+
+  if (!respuesta.ok) {
+    throw new Error(`Error al registrar ubicación. Status: ${respuesta.status}. Respuesta: ${texto}`);
+  }
+
+  return texto ? JSON.parse(texto) : null;
+}
+
+export async function listarUbicaciones() {
+  const respuesta = await fetch(`${API_GEO}/listar`);
+
+  if (!respuesta.ok) {
+    throw new Error("Error al listar ubicaciones");
+  }
+
+  return await respuesta.json();
+}
+
+// =======================
+// LOGIN
+// =======================
 
 export async function login(username, password) {
-    const respuesta = await fetch(`${API_LOGIN}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-    });
-    const data = await respuesta.json();
-    
-    if (data.success && data.token) {
-       
-        localStorage.setItem("token", data.token); 
-        
-        localStorage.setItem("usuario", JSON.stringify({
-            correo: username,
-            rol: data.rol
-        }));
-        
-        // 3. Redirección según el rango
-        if (data.rol === 'ADMIN') {
-           
-            window.location.href = 'http://localhost:3000/index.html'; 
-        } else {
-           
-            window.location.href = '/perfil'; 
-        }
+  const respuesta = await fetch(`${API_LOGIN}/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (!respuesta.ok) {
+    throw new Error("Error al iniciar sesión");
+  }
+
+  const data = await respuesta.json();
+
+  if (data.success && data.token) {
+    localStorage.setItem("token", data.token);
+
+    localStorage.setItem(
+      "usuario",
+      JSON.stringify({
+        correo: username,
+        rol: data.rol,
+      })
+    );
+
+    if (data.rol === "ADMIN") {
+      window.location.href = "http://localhost:3000/index.html";
+    } else {
+      window.location.href = "/perfil";
     }
-    
-    return data;
+  }
+
+  return data;
 }
+
+// =======================
+// USUARIOS
+// =======================
 
 export async function registrarUsuario(usuarioData) {
-    const respuesta = await fetch(`${API_USUARIOS}/registrar`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(usuarioData),
-    });
-    return respuesta.json();
-}
+  const respuesta = await fetch(`${API_USUARIOS}/registrar`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(usuarioData),
+  });
 
-export async function obtenerMascotasAdopcion() {
-  return [
-    {
-      id: 1,
-      nombre: "Luna",
-      tipo: "Perro",
-      edad: "2 años",
-      ubicacion: "Santiago Centro",
-      lugar: "Fundación Patitas Seguras",
-      descripcion:
-        "Luna es una perrita tranquila, cariñosa y sociable. Actualmente se encuentra en una fundación donde recibe cuidados mientras espera una familia responsable.",
-      estado: "Disponible",
-      imagen:
-        "https://images.unsplash.com/photo-1558788353-f76d92427f16?auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      id: 2,
-      nombre: "Milo",
-      tipo: "Gato",
-      edad: "1 año",
-      ubicacion: "Maipú",
-      lugar: "Rescate Huellitas",
-      descripcion:
-        "Milo es un gatito curioso y juguetón. Está en un hogar temporal asociado a un rescate animal, donde se encuentra protegido y cuidado.",
-      estado: "Disponible",
-      imagen:
-        "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      id: 3,
-      nombre: "Rocky",
-      tipo: "Perro",
-      edad: "4 años",
-      ubicacion: "La Florida",
-      lugar: "Refugio Animal Esperanza",
-      descripcion:
-        "Rocky es un perro activo y regalón. Se recomienda para una familia que pueda entregarle paseos, compañía y un ambiente seguro.",
-      estado: "Disponible",
-      imagen:
-        "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&w=800&q=80",
-    },
-  ];
-}
+  if (!respuesta.ok) {
+    throw new Error("Error al registrar usuario");
+  }
 
+  return await respuesta.json();
+}
 
 export function obtenerUsuarioActual() {
   const usuario = localStorage.getItem("usuario");
@@ -123,6 +163,9 @@ export function cerrarSesionUsuario() {
   localStorage.removeItem("usuario");
 }
 
+// =======================
+// MIS MASCOTAS
+// =======================
 
 export async function obtenerMisMascotas() {
   const mascotas = localStorage.getItem("misMascotas");
@@ -154,4 +197,12 @@ export async function eliminarMiMascota(id) {
   localStorage.setItem("misMascotas", JSON.stringify(mascotasActualizadas));
 
   return true;
+}
+
+export async function obtenerMascotasAdopcion() {
+  console.warn(
+    "obtenerMascotasAdopcion aún no está conectada a un microservicio real."
+  );
+
+  return [];
 }

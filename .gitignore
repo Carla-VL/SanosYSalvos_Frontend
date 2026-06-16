@@ -1,7 +1,3 @@
-node_modules
-dist
-.env
-
 Front_Sanos_y_Salvos/node_modules/
 Front_Sanos_y_Salvos/dist/
 Front_Sanos_y_Salvos/.vite/

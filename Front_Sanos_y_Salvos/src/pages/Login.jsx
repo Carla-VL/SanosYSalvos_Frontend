@@ -61,6 +61,7 @@ function Login({ setPagina }) {
         ).toUpperCase();
 
         localStorage.setItem("token", token);
+        localStorage.setItem("rol", rol);
 
         localStorage.setItem(
           "usuario",
@@ -81,18 +82,20 @@ function Login({ setPagina }) {
           })
         );
 
-        setMensaje(
-          rol === "ADMIN"
-            ? "¡Acceso concedido! Entrando al dashboard..."
-            : "¡Acceso concedido! Entrando a tu perfil..."
-        );
+        if (rol === "ADMIN") {
+          setMensaje("¡Acceso concedido! Entrando al dashboard...");
+        } else if (rol === "VETERINARIA") {
+          setMensaje("¡Acceso concedido! Entrando al perfil de veterinaria...");
+        } else {
+          setMensaje("¡Acceso concedido! Entrando a tu perfil...");
+        }
 
         setTimeout(() => {
-         setPagina("perfil");
+          setPagina("perfil");
 
-         window.scrollTo({
-          top: 0,
-          behavior: "smooth",
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
           });
         }, 1000);
       } else {
