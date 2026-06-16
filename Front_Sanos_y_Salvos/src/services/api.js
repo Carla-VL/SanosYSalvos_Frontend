@@ -206,3 +206,31 @@ export async function obtenerMascotasAdopcion() {
 
   return [];
 }
+
+const ADOPCION_API_URL = "http://localhost:8086/api/adopcion";
+
+export async function registrarMascotaAdopcion(datosMascota) {
+  const respuesta = await fetch(`${ADOPCION_API_URL}/registrar`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(datosMascota),
+  });
+
+  if (!respuesta.ok) {
+    throw new Error("No se pudo registrar la mascota en adopción.");
+  }
+
+  return await respuesta.json();
+}
+
+export async function listarMascotasAdopcion() {
+  const respuesta = await fetch(`${ADOPCION_API_URL}/catalogo`);
+
+  if (!respuesta.ok) {
+    throw new Error("No se pudieron cargar las mascotas en adopción.");
+  }
+
+  return await respuesta.json();
+}

@@ -5,11 +5,13 @@ import {
   obtenerMisMascotas,
   agregarMiMascota,
   eliminarMiMascota,
+  registrarMascotaAdopcion,
 } from "../services/api";
 
 function Perfil({ setPagina }) {
   const [usuario, setUsuario] = useState(null);
   const [mascotas, setMascotas] = useState([]);
+
   const [formulario, setFormulario] = useState({
     nombre: "",
     tipo: "",
@@ -18,7 +20,21 @@ function Perfil({ setPagina }) {
     descripcion: "",
   });
 
-  const DASHBOARD_ADMIN_URL = "http://localhost:3000/index.html"; 
+  const [formularioAdopcion, setFormularioAdopcion] = useState({
+    nombre: "",
+    especie: "",
+    raza: "",
+    edad: "",
+    ubicacion: "",
+    contacto: "",
+    descripcion: "",
+    foto: "",
+  });
+
+  const [mensajeAdopcion, setMensajeAdopcion] = useState("");
+  const [cargandoAdopcion, setCargandoAdopcion] = useState(false);
+
+  const DASHBOARD_ADMIN_URL = "http://localhost:3000/index.html";
 
   useEffect(() => {
     const usuarioGuardado = obtenerUsuarioActual();
@@ -36,6 +52,36 @@ function Perfil({ setPagina }) {
       ...formulario,
       [evento.target.name]: evento.target.value,
     });
+  }
+
+  function manejarCambioAdopcion(evento) {
+    setFormularioAdopcion({
+      ...formularioAdopcion,
+      [evento.target.name]: evento.target.value,
+    });
+  }
+
+  function manejarFotoAdopcion(evento) {
+    const archivo = evento.target.files[0];
+
+    if (!archivo) {
+      setFormularioAdopcion({
+        ...formularioAdopcion,
+        foto: "",
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      setFormularioAdopcion({
+        ...formularioAdopcion,
+        foto: reader.result,
+      });
+    };
+
+    reader.readAsDataURL(archivo);
   }
 
   async function manejarAgregarMascota(evento) {
@@ -57,6 +103,59 @@ function Perfil({ setPagina }) {
     });
 
     cargarMascotas();
+  }
+
+  async function manejarRegistrarAdopcion(evento) {
+    evento.preventDefault();
+
+    if (
+      !formularioAdopcion.nombre.trim() ||
+      !formularioAdopcion.especie.trim() ||
+      !formularioAdopcion.descripcion.trim()
+    ) {
+      alert("Debes ingresar al menos nombre, especie y descripción.");
+      return;
+    }
+
+    const datosParaEnviar = {
+      nombre: formularioAdopcion.nombre,
+      especie: formularioAdopcion.especie,
+      raza: formularioAdopcion.raza,
+      edad: Number(formularioAdopcion.edad) || 0,
+      ubicacion: formularioAdopcion.ubicacion,
+      contacto: formularioAdopcion.contacto || usuario?.correo || "",
+      veterinaria: usuario?.nombre || "Veterinaria",
+      descripcion: formularioAdopcion.descripcion,
+      foto: formularioAdopcion.foto,
+      estado: "DISPONIBLE",
+    };
+
+    try {
+      setCargandoAdopcion(true);
+      setMensajeAdopcion("");
+
+      await registrarMascotaAdopcion(datosParaEnviar);
+
+      setFormularioAdopcion({
+        nombre: "",
+        especie: "",
+        raza: "",
+        edad: "",
+        ubicacion: "",
+        contacto: "",
+        descripcion: "",
+        foto: "",
+      });
+
+      setMensajeAdopcion(
+        "Mascota registrada correctamente en el apartado de adopción."
+      );
+    } catch (error) {
+      console.error("Error registrando mascota en adopción:", error);
+      alert("No se pudo registrar la mascota en adopción.");
+    } finally {
+      setCargandoAdopcion(false);
+    }
   }
 
   async function manejarEliminarMascota(id) {
@@ -106,14 +205,33 @@ function Perfil({ setPagina }) {
     );
   }
 
-  const rolUsuario = (usuario.rol || "USER").toUpperCase();
+  const rolLocalStorage = localStorage.getItem("rol");
+  const rolUsuario = (usuario.rol || rolLocalStorage || "USER").toUpperCase();
+
   const esAdmin = rolUsuario === "ADMIN";
+  const esVeterinaria = rolUsuario === "VETERINARIA";
+
+  function mostrarRol() {
+    if (esAdmin) {
+      return "Administrador";
+    }
+
+    if (esVeterinaria) {
+      return "Veterinaria";
+    }
+
+    return "Usuario";
+  }
 
   return (
     <section className="perfil-page">
       <div className="perfil-card">
         <p className="seccion-subtitulo">
-          {esAdmin ? "Cuenta administrador" : "Mi cuenta"}
+          {esAdmin
+            ? "Cuenta administrador"
+            : esVeterinaria
+            ? "Cuenta veterinaria"
+            : "Mi cuenta"}
         </p>
 
         <h1>Mi perfil</h1>
@@ -128,8 +246,7 @@ function Perfil({ setPagina }) {
           </p>
 
           <p>
-            <strong>Rol:</strong>{" "}
-            {esAdmin ? "Administrador" : "Usuario"}
+            <strong>Rol:</strong> {mostrarRol()}
           </p>
         </div>
 
@@ -151,6 +268,118 @@ function Perfil({ setPagina }) {
           Cerrar sesión
         </button>
       </div>
+
+      {esVeterinaria && (
+        <div className="perfil-card perfil-adopcion-card">
+          <p className="seccion-subtitulo">Gestión veterinaria</p>
+          <h2>Registrar mascota en adopción</h2>
+
+          <p className="perfil-texto">
+            Completa este formulario para agregar una mascota al apartado de
+            adopción.
+          </p>
+
+          <form
+            className="perfil-formulario"
+            onSubmit={manejarRegistrarAdopcion}
+          >
+            <input
+              type="text"
+              name="nombre"
+              placeholder="Nombre de la mascota"
+              value={formularioAdopcion.nombre}
+              onChange={manejarCambioAdopcion}
+              disabled={cargandoAdopcion}
+            />
+
+            <input
+              type="text"
+              name="especie"
+              placeholder="Especie: perro, gato, etc."
+              value={formularioAdopcion.especie}
+              onChange={manejarCambioAdopcion}
+              disabled={cargandoAdopcion}
+            />
+
+            <input
+              type="text"
+              name="raza"
+              placeholder="Raza o mestizo"
+              value={formularioAdopcion.raza}
+              onChange={manejarCambioAdopcion}
+              disabled={cargandoAdopcion}
+            />
+
+            <input
+              type="text"
+              name="edad"
+              placeholder="Edad aproximada"
+              value={formularioAdopcion.edad}
+              onChange={manejarCambioAdopcion}
+              disabled={cargandoAdopcion}
+            />
+
+            <input
+              type="text"
+              name="ubicacion"
+              placeholder="Ubicación"
+              value={formularioAdopcion.ubicacion}
+              onChange={manejarCambioAdopcion}
+              disabled={cargandoAdopcion}
+            />
+
+            <input
+              type="text"
+              name="contacto"
+              placeholder="Contacto de la veterinaria"
+              value={formularioAdopcion.contacto}
+              onChange={manejarCambioAdopcion}
+              disabled={cargandoAdopcion}
+            />
+
+            <textarea
+              name="descripcion"
+              placeholder="Descripción de la mascota en adopción"
+              value={formularioAdopcion.descripcion}
+              onChange={manejarCambioAdopcion}
+              disabled={cargandoAdopcion}
+            ></textarea>
+
+            <div className="perfil-campo-foto">
+              <label>Foto de la mascota</label>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={manejarFotoAdopcion}
+                disabled={cargandoAdopcion}
+              />
+
+              {formularioAdopcion.foto && (
+                <img
+                  src={formularioAdopcion.foto}
+                  alt="Vista previa mascota en adopción"
+                  className="preview-foto-mascota"
+                />
+              )}
+            </div>
+
+            <button
+              className="perfil-boton"
+              type="submit"
+              disabled={cargandoAdopcion}
+            >
+              {cargandoAdopcion
+                ? "Registrando..."
+                : "Registrar en adopción"}
+            </button>
+          </form>
+
+          {mensajeAdopcion && (
+            <div className="alert alert-success mt-3">{mensajeAdopcion}</div>
+          )}
+        </div>
+      )}
 
       <div className="perfil-card">
         <p className="seccion-subtitulo">Mascotas registradas</p>
