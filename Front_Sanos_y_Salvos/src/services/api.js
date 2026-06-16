@@ -2,6 +2,7 @@ const API_BFF = "http://localhost:8085/api/bff";
 const API_LOGIN = "http://localhost:8082/api/auth";
 const API_USUARIOS = "http://localhost:8083/api/usuarios";
 const API_GEO = "http://localhost:8084/api/geo";
+const ADOPCION_API_URL = "http://localhost:8086/api/adopcion";
 
 // =======================
 // MASCOTAS / REPORTES
@@ -46,7 +47,9 @@ export async function crearReporte(reporte, tipo) {
   console.log("Respuesta crearReporte texto:", texto);
 
   if (!respuesta.ok) {
-    throw new Error(`Error al crear el reporte. Status: ${respuesta.status}. Respuesta: ${texto}`);
+    throw new Error(
+      `Error al crear el reporte. Status: ${respuesta.status}. Respuesta: ${texto}`
+    );
   }
 
   return texto ? JSON.parse(texto) : null;
@@ -73,7 +76,9 @@ export async function registrarUbicacion(ubicacion) {
   console.log("Respuesta GEO texto:", texto);
 
   if (!respuesta.ok) {
-    throw new Error(`Error al registrar ubicación. Status: ${respuesta.status}. Respuesta: ${texto}`);
+    throw new Error(
+      `Error al registrar ubicación. Status: ${respuesta.status}. Respuesta: ${texto}`
+    );
   }
 
   return texto ? JSON.parse(texto) : null;
@@ -107,24 +112,6 @@ export async function login(username, password) {
   }
 
   const data = await respuesta.json();
-
-  if (data.success && data.token) {
-    localStorage.setItem("token", data.token);
-
-    localStorage.setItem(
-      "usuario",
-      JSON.stringify({
-        correo: username,
-        rol: data.rol,
-      })
-    );
-
-    if (data.rol === "ADMIN") {
-      window.location.href = "http://localhost:3000/index.html";
-    } else {
-      window.location.href = "/perfil";
-    }
-  }
 
   return data;
 }
@@ -161,6 +148,7 @@ export function existeSesionActiva() {
 export function cerrarSesionUsuario() {
   localStorage.removeItem("token");
   localStorage.removeItem("usuario");
+  localStorage.removeItem("rol");
 }
 
 // =======================
@@ -199,15 +187,19 @@ export async function eliminarMiMascota(id) {
   return true;
 }
 
+// =======================
+// ADOPCIÓN
+// =======================
+
 export async function obtenerMascotasAdopcion() {
-  console.warn(
-    "obtenerMascotasAdopcion aún no está conectada a un microservicio real."
-  );
+  const respuesta = await fetch(`${ADOPCION_API_URL}/catalogo`);
 
-  return [];
+  if (!respuesta.ok) {
+    throw new Error("No se pudieron cargar las mascotas en adopción.");
+  }
+
+  return await respuesta.json();
 }
-
-const ADOPCION_API_URL = "http://localhost:8086/api/adopcion";
 
 export async function registrarMascotaAdopcion(datosMascota) {
   const respuesta = await fetch(`${ADOPCION_API_URL}/registrar`, {
@@ -226,11 +218,5 @@ export async function registrarMascotaAdopcion(datosMascota) {
 }
 
 export async function listarMascotasAdopcion() {
-  const respuesta = await fetch(`${ADOPCION_API_URL}/catalogo`);
-
-  if (!respuesta.ok) {
-    throw new Error("No se pudieron cargar las mascotas en adopción.");
-  }
-
-  return await respuesta.json();
+  return await obtenerMascotasAdopcion();
 }

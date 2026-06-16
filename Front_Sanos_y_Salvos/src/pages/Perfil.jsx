@@ -380,7 +380,7 @@ function Perfil({ setPagina }) {
           )}
         </div>
       )}
-
+      {!esVeterinaria && (
       <div className="perfil-card">
         <p className="seccion-subtitulo">Mascotas registradas</p>
         <h2>Mis mascotas</h2>
@@ -478,6 +478,7 @@ function Perfil({ setPagina }) {
           )}
         </div>
       </div>
+      )}
     </section>
   );
 }
