@@ -42,10 +42,8 @@ function Perfil({ setPagina }) {
 
   useEffect(() => {
     const usuarioGuardado = obtenerUsuarioActual();
-    setUsuario(usuarioGuardado);
-
-    cargarMascotas();
-
+    
+    // Validamos qué rol tiene realmente
     const rolLocalStorage = localStorage.getItem("rol");
     const rolUsuario = (
       usuarioGuardado?.rol ||
@@ -53,8 +51,17 @@ function Perfil({ setPagina }) {
       "USER"
     ).toUpperCase();
 
-    if (rolUsuario === "VETERINARIA" && usuarioGuardado?.correo) {
-      cargarMascotasAdopcionVeterinaria(usuarioGuardado.correo);
+    // Actualizamos el estado del usuario asegurándonos que el rol esté correcto
+    if (usuarioGuardado) {
+      setUsuario({ ...usuarioGuardado, rol: rolUsuario });
+    }
+
+    cargarMascotas();
+
+    if (rolUsuario === "VETERINARIO" || rolUsuario === "VETERINARIA") {
+      if (usuarioGuardado?.correo) {
+        cargarMascotasAdopcionVeterinaria(usuarioGuardado.correo);
+      }
     }
   }, []);
 
@@ -261,21 +268,12 @@ function Perfil({ setPagina }) {
     );
   }
 
-  const rolLocalStorage = localStorage.getItem("rol");
-  const rolUsuario = (usuario.rol || rolLocalStorage || "USER").toUpperCase();
-
-  const esAdmin = rolUsuario === "ADMIN";
-  const esVeterinaria = rolUsuario === "VETERINARIA";
+  const esAdmin = usuario.rol === "ADMIN";
+  const esVeterinaria = usuario.rol === "VETERINARIO" || usuario.rol === "VETERINARIA";
 
   function mostrarRol() {
-    if (esAdmin) {
-      return "Administrador";
-    }
-
-    if (esVeterinaria) {
-      return "Veterinaria";
-    }
-
+    if (esAdmin) return "Administrador";
+    if (esVeterinaria) return "Veterinaria";
     return "Usuario";
   }
 
@@ -306,9 +304,10 @@ function Perfil({ setPagina }) {
           </p>
         </div>
 
+        {/* El botón del dashboard ahora es EXCLUSIVO del ADMIN */}
         {esAdmin && (
           <button
-            className="perfil-boton"
+            className="perfil-boton mb-3"
             type="button"
             onClick={irAlDashboardAdmin}
           >

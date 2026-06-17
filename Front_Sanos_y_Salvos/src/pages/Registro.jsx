@@ -68,64 +68,73 @@ function Registro({ setPagina }) {
   }
 
   async function manejarRegistro(evento) {
-  evento.preventDefault();
+    evento.preventDefault();
 
-  const validaciones = validarFormulario();
-  setErrores(validaciones);
-  setMensaje("");
+    const validaciones = validarFormulario();
+    setErrores(validaciones);
+    setMensaje("");
 
-  if (Object.keys(validaciones).length > 0) {
-    return;
-  }
+    if (Object.keys(validaciones).length > 0) {
+      return;
+    }
 
-  setCargando(true);
+    setCargando(true);
 
-  try {
-    const usernameGenerado = formulario.correo
-  .split("@")[0]
-  .replace(/[^a-zA-Z0-9]/g, "");
+    try {
+      // Generamos el username sacando lo que está antes del @ del correo
+      const usernameGenerado = formulario.correo
+        .split("@")[0]
+        .replace(/[^a-zA-Z0-9]/g, "");
 
-  const datosParaEnviar = {
-  username: usernameGenerado,
-  email: formulario.correo,
-  password: formulario.password,
-  nombreCompleto: formulario.nombrecompleto,
-  rol: formulario.rol,
-  };
+      const datosParaEnviar = {
+        username: usernameGenerado,
+        email: formulario.correo,
+        password: formulario.password,
+        nombreCompleto: formulario.nombrecompleto,
+        rol: formulario.rol,
+      };
 
-    const respuesta = await registrarUsuario(datosParaEnviar);
-    console.log("Servidor respondió:", respuesta);
+      const respuesta = await registrarUsuario(datosParaEnviar);
+      console.log("Servidor respondió:", respuesta);
 
-    setMensaje("¡Cuenta creada con éxito! Ahora inicia sesión.");
+      setMensaje("¡Cuenta creada con éxito! Ahora inicia sesión.");
 
-    setFormulario({
-      nombrecompleto: "",
-      correo: "",
-      password: "",
-      confirmarPassword: "",
-      rol: "USER",
-    });
-
-    setTimeout(() => {
-      setPagina("login");
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
+      // Limpiamos el formulario
+      setFormulario({
+        nombrecompleto: "",
+        correo: "",
+        password: "",
+        confirmarPassword: "",
+        rol: "USER",
       });
-    }, 1500);
-  } catch (error) {
-    console.error("Error en el registro:", error);
 
-    setErrores({
-      global:
-        error.message ||
-        "No se pudo crear la cuenta. Revisa si el microservicio de usuarios está activo.",
-    });
-  } finally {
-    setCargando(false);
+      // Redirigimos al login después de un ratito
+      setTimeout(() => {
+        setPagina("login");
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }, 1500);
+
+    } catch (error) {
+      console.error("Error en el registro:", error);
+      
+      let mensajeAmigable = "No se pudo crear la cuenta. Revisa tu conexión.";
+
+      // Si el error tiene el código 500 o habla de un Internal Server Error (Duplicado)
+      if (error.message && (error.message.includes("500") || error.message.includes("Internal Server Error"))) {
+        mensajeAmigable = "Este correo ya está registrado en el sistema. ¡Intenta con otro o inicia sesión!";
+      } else if (error.message) {
+        mensajeAmigable = error.message;
+      }
+
+      setErrores({ global: mensajeAmigable });
+    } finally {
+      setCargando(false);
+    }
   }
-}
 
   return (
     <section className="container py-5">
