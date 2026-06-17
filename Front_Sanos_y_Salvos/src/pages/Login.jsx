@@ -126,6 +126,9 @@ function Login({ setPagina }) {
         .split("@")[0]
         .replace(/[^a-zA-Z0-9]/g, "");
 
+      console.log("Username enviado al login:", usernameGenerado);
+      console.log("Password enviada al login:", formulario.password);
+
       const data = await login(usernameGenerado, formulario.password);
 
       const token = data?.token || data?.jwt || data?.accessToken;
