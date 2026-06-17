@@ -14,13 +14,19 @@ npm install
 ## Variables de entorno
 
 El proyecto utiliza Mapbox para mostrar mapas, por lo que se debe crear un archivo .env en la raíz de Front_Sanos_y_Salvos.
+
+
 VITE_MAPBOX_TOKEN=tu_token_de_mapbox
 
 ## Para levantar el frontend en modo desarrollo:
+
+
 npm run dev
 
 ## iniciar pruebas:
 npm run test
+
+
 npm run test:run
 
 
