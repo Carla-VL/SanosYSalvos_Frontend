@@ -253,7 +253,7 @@ function Registro({ setPagina }) {
           )}
         </div>
 
-        {formulario.rol === "VETERINARIA" && (
+        {formulario.rol === "VETERINARIO" && (
           <div className="alert alert-info p-2 mb-3">
             Esta cuenta tendrá acceso para agregar animales en adopción.
           </div>

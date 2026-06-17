@@ -32,37 +32,120 @@ function Login({ setPagina }) {
     return nuevosErrores;
   }
 
-  async function manejarLogin(evento) {
-  evento.preventDefault();
+  function obtenerPayloadToken(token) {
+    try {
+      if (!token || !token.includes(".")) {
+        return null;
+      }
 
-  const validaciones = validarFormulario();
-  setErrores(validaciones);
-  setMensaje("");
+      const payloadBase64 = token.split(".")[1];
 
-  if (Object.keys(validaciones).length > 0) {
-    return;
+      const payloadCorregido = payloadBase64
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+
+      const payloadJson = decodeURIComponent(
+        atob(payloadCorregido)
+          .split("")
+          .map((caracter) => {
+            return "%" + ("00" + caracter.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join("")
+      );
+
+      return JSON.parse(payloadJson);
+    } catch (error) {
+      console.error("No se pudo leer el payload del token:", error);
+      return null;
+    }
   }
 
-  setCargando(true);
-  console.log("Enviando credenciales al microservicio de Auth...");
+  function normalizarRol(rol) {
+    if (!rol) return null;
 
-  try {
-    const usernameGenerado = formulario.correo
-      .split("@")[0]
-      .replace(/[^a-zA-Z0-9]/g, "");
+    let rolLimpio = "";
 
-    const data = await login(usernameGenerado, formulario.password);
+    if (Array.isArray(rol)) {
+      rolLimpio = rol[0] || "";
+    } else {
+      rolLimpio = String(rol);
+    }
 
-    const token = data?.token || data?.jwt || data?.accessToken;
+    rolLimpio = rolLimpio
+      .replace("ROLE_", "")
+      .replace("[", "")
+      .replace("]", "")
+      .trim()
+      .toUpperCase();
 
-    if (token) {
-      const rol = (
-        data?.rol ||
-        data?.role ||
-        data?.usuario?.rol ||
-        data?.usuario?.role ||
-        "USER"
-      ).toUpperCase();
+    if (rolLimpio === "VETERINARIA") {
+      return "VETERINARIO";
+    }
+
+    return rolLimpio;
+  }
+
+  function obtenerRolDesdeData(data, token) {
+    const payloadToken = obtenerPayloadToken(token);
+
+    console.log("DATA QUE DEVUELVE LOGIN:", data);
+    console.log("PAYLOAD DEL TOKEN:", payloadToken);
+
+    const rolEncontrado =
+      data?.rol ||
+      data?.role ||
+      data?.roles ||
+      data?.authorities ||
+      data?.usuario?.rol ||
+      data?.usuario?.role ||
+      data?.usuario?.roles ||
+      payloadToken?.rol ||
+      payloadToken?.role ||
+      payloadToken?.roles ||
+      payloadToken?.authorities;
+
+    return normalizarRol(rolEncontrado);
+  }
+
+  async function manejarLogin(evento) {
+    evento.preventDefault();
+
+    const validaciones = validarFormulario();
+    setErrores(validaciones);
+    setMensaje("");
+
+    if (Object.keys(validaciones).length > 0) {
+      return;
+    }
+
+    setCargando(true);
+    console.log("Enviando credenciales al microservicio de Auth...");
+
+    try {
+      const usernameGenerado = formulario.correo
+        .split("@")[0]
+        .replace(/[^a-zA-Z0-9]/g, "");
+
+      const data = await login(usernameGenerado, formulario.password);
+
+      const token = data?.token || data?.jwt || data?.accessToken;
+
+      if (!token) {
+        setErrores({
+          global: data?.mensaje || "Correo o contraseña incorrectos.",
+        });
+        return;
+      }
+
+      const rol = obtenerRolDesdeData(data, token);
+
+      if (!rol) {
+        setErrores({
+          global:
+            "El login no está devolviendo el rol del usuario. Hay que revisar el microservicio Auth.",
+        });
+        return;
+      }
 
       localStorage.setItem("token", token);
       localStorage.setItem("rol", rol);
@@ -72,8 +155,10 @@ function Login({ setPagina }) {
         JSON.stringify({
           nombre:
             data?.nombre ||
+            data?.nombreCompleto ||
             data?.nombrecompleto ||
             data?.usuario?.nombre ||
+            data?.usuario?.nombreCompleto ||
             data?.usuario?.nombrecompleto ||
             formulario.correo.split("@")[0],
           correo:
@@ -88,7 +173,7 @@ function Login({ setPagina }) {
 
       if (rol === "ADMIN") {
         setMensaje("¡Acceso concedido! Entrando al dashboard...");
-      } else if (rol === "VETERINARIO" || rol === "VETERINARIA") {
+      } else if (rol === "VETERINARIO") {
         setMensaje("¡Acceso concedido! Entrando al perfil de veterinaria...");
       } else {
         setMensaje("¡Acceso concedido! Entrando a tu perfil...");
@@ -102,21 +187,16 @@ function Login({ setPagina }) {
           behavior: "smooth",
         });
       }, 1000);
-    } else {
-      setErrores({
-        global: data?.mensaje || "Correo o contraseña incorrectos.",
-      });
-    }
-  } catch (error) {
-    console.error("Error conectando al Login:", error);
+    } catch (error) {
+      console.error("Error conectando al Login:", error);
 
-    setErrores({
-      global: "Correo o contraseña incorrectos.",
-    });
-  } finally {
-    setCargando(false);
+      setErrores({
+        global: "Correo o contraseña incorrectos.",
+      });
+    } finally {
+      setCargando(false);
+    }
   }
-}
 
   return (
     <section className="container py-5">
