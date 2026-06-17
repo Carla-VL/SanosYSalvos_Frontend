@@ -29,6 +29,12 @@ export async function obtenerReportes() {
 }
 
 export async function crearReporte(reporte, tipo) {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("Debes iniciar sesión para registrar una mascota.");
+  }
+
   const url = tipo
     ? `${API_BFF}/mascotas/reportar?tipo=${tipo}`
     : `${API_BFF}/mascotas/reportar`;
@@ -37,6 +43,7 @@ export async function crearReporte(reporte, tipo) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": "Bearer " + token,
     },
     body: JSON.stringify(reporte),
   });
@@ -165,6 +172,7 @@ export function cerrarSesionUsuario() {
   localStorage.removeItem("token");
   localStorage.removeItem("usuario");
   localStorage.removeItem("rol");
+  localStorage.removeItem("misMascotas");
 }
 
 // =======================
@@ -172,33 +180,79 @@ export function cerrarSesionUsuario() {
 // =======================
 
 export async function obtenerMisMascotas() {
-  const mascotas = localStorage.getItem("misMascotas");
-  return mascotas ? JSON.parse(mascotas) : [];
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    console.error("No hay token guardado");
+    return [];
+  }
+
+  const respuesta = await fetch(`${API_BFF}/mascotas/mis-mascotas`, {
+    method: "GET",
+    headers: {
+      "Authorization": "Bearer " + token,
+    },
+  });
+
+  const texto = await respuesta.text();
+
+  console.log("Respuesta obtenerMisMascotas status:", respuesta.status);
+  console.log("Respuesta obtenerMisMascotas texto:", texto);
+
+  if (!respuesta.ok) {
+    console.error("Error al obtener mis mascotas:", respuesta.status, texto);
+    return [];
+  }
+
+  return texto ? JSON.parse(texto) : [];
 }
 
 export async function agregarMiMascota(mascota) {
-  const mascotas = await obtenerMisMascotas();
+  const token = localStorage.getItem("token");
 
-  const nuevaMascota = {
-    id: Date.now(),
+  if (!token) {
+    throw new Error("Debes iniciar sesión para registrar una mascota.");
+  }
+
+  const mascotaParaEnviar = {
     ...mascota,
+    especie: mascota.especie || mascota.tipo,
+    estadoReporte: mascota.estadoReporte || "REGISTRO NORMAL",
   };
 
-  const mascotasActualizadas = [...mascotas, nuevaMascota];
+  delete mascotaParaEnviar.tipo;
+  delete mascotaParaEnviar.dueñoId;
+  delete mascotaParaEnviar.duenoId;
+  delete mascotaParaEnviar.dueño_id;
+  delete mascotaParaEnviar.dueno_id;
 
-  localStorage.setItem("misMascotas", JSON.stringify(mascotasActualizadas));
+  const respuesta = await fetch(`${API_BFF}/mascotas/reportar`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token,
+    },
+    body: JSON.stringify(mascotaParaEnviar),
+  });
 
-  return nuevaMascota;
+  const texto = await respuesta.text();
+
+  console.log("Respuesta agregarMiMascota status:", respuesta.status);
+  console.log("Respuesta agregarMiMascota texto:", texto);
+
+  if (!respuesta.ok) {
+    throw new Error(
+      `Error al registrar mascota. Status: ${respuesta.status}. Respuesta: ${texto}`
+    );
+  }
+
+  return texto ? JSON.parse(texto) : null;
 }
 
 export async function eliminarMiMascota(id) {
-  const mascotas = await obtenerMisMascotas();
-
-  const mascotasActualizadas = mascotas.filter(
-    (mascota) => mascota.id !== id
+  console.warn(
+    "EliminarMiMascota todavía no está conectado para usuarios normales en el backend."
   );
-
-  localStorage.setItem("misMascotas", JSON.stringify(mascotasActualizadas));
 
   return true;
 }
@@ -262,4 +316,3 @@ export async function marcarMascotaAdoptada(id) {
 
   return await respuesta.json();
 }
-
