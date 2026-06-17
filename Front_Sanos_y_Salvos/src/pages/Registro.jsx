@@ -97,7 +97,9 @@ function Registro({ setPagina }) {
       const respuesta = await registrarUsuario(datosParaEnviar);
       console.log("Servidor respondió:", respuesta);
 
-      setMensaje("¡Cuenta creada con éxito! Ahora inicia sesión.");
+      // Limpiamos los errores visuales y ponemos el mensaje de éxito
+      setErrores({});
+      setMensaje("Registro completado, redirigiendo a inicio de sesión...");
 
       // Limpiamos el formulario
       setFormulario({
@@ -108,7 +110,7 @@ function Registro({ setPagina }) {
         rol: "USER",
       });
 
-      // Redirigimos al login después de un ratito
+      // Redirigimos al login después de 2 segundos para que el usuario alcance a leer el mensaje
       setTimeout(() => {
         setPagina("login");
 
@@ -116,14 +118,13 @@ function Registro({ setPagina }) {
           top: 0,
           behavior: "smooth",
         });
-      }, 1500);
+      }, 2000);
 
     } catch (error) {
       console.error("Error en el registro:", error);
       
       let mensajeAmigable = "No se pudo crear la cuenta. Revisa tu conexión.";
 
-      // Si el error tiene el código 500 o habla de un Internal Server Error (Duplicado)
       if (error.message && (error.message.includes("500") || error.message.includes("Internal Server Error"))) {
         mensajeAmigable = "Este correo ya está registrado en el sistema. ¡Intenta con otro o inicia sesión!";
       } else if (error.message) {
@@ -272,6 +273,11 @@ function Registro({ setPagina }) {
           <div className="alert alert-danger p-2 mb-3">{errores.global}</div>
         )}
 
+        {/* AQUÍ ESTÁ EL MENSAJE DE ÉXITO */}
+        {mensaje && (
+          <div className="alert alert-success p-2 mb-3 text-center fw-bold">{mensaje}</div>
+        )}
+
         <button
           className="btn btn-success w-100"
           type="submit"
@@ -279,8 +285,6 @@ function Registro({ setPagina }) {
         >
           {cargando ? "Registrando..." : "Crear cuenta"}
         </button>
-
-        {mensaje && <div className="alert alert-success mt-3">{mensaje}</div>}
 
         <p className="mt-3 mb-0 text-center">
           ¿Ya tienes cuenta?{" "}
