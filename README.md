@@ -7,6 +7,7 @@ Este repositorio corresponde a la capa visual del proyecto y se conecta con dist
 ---
 ## Comandos
 cd Front_Sanos_y_Salvos
+
 npm install
 
 
