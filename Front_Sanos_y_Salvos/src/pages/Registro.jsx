@@ -19,6 +19,9 @@ function Registro({ setPagina }) {
       ...formulario,
       [evento.target.name]: evento.target.value,
     });
+
+    setErrores({});
+    setMensaje("");
   }
 
   function seleccionarRol(rolSeleccionado) {
@@ -26,6 +29,9 @@ function Registro({ setPagina }) {
       ...formulario,
       rol: rolSeleccionado,
     });
+
+    setErrores({});
+    setMensaje("");
   }
 
   function validarFormulario() {
@@ -35,19 +41,23 @@ function Registro({ setPagina }) {
     const tieneNumero = /[0-9]/;
 
     if (!formulario.nombrecompleto.trim()) {
-      nuevosErrores.nombrecompleto = "El nombre es obligatorio.";
+      nuevosErrores.nombrecompleto =
+        formulario.rol === "VETERINARIO"
+          ? "El nombre de la veterinaria es obligatorio."
+          : "El nombre es obligatorio.";
     }
 
     if (!formulario.correo.trim()) {
       nuevosErrores.correo = "El correo es obligatorio.";
-    } else if (!correoValido.test(formulario.correo)) {
+    } else if (!correoValido.test(formulario.correo.trim())) {
       nuevosErrores.correo = "Ingresa un correo válido.";
     }
 
     if (!formulario.password) {
       nuevosErrores.password = "La contraseña es obligatoria.";
     } else if (formulario.password.length < 8) {
-      nuevosErrores.password = "La contraseña debe tener al menos 8 caracteres.";
+      nuevosErrores.password =
+        "La contraseña debe tener al menos 8 caracteres.";
     } else if (!tieneMayuscula.test(formulario.password)) {
       nuevosErrores.password = "Debe contener al menos una mayúscula.";
     } else if (!tieneNumero.test(formulario.password)) {
@@ -70,6 +80,8 @@ function Registro({ setPagina }) {
   async function manejarRegistro(evento) {
     evento.preventDefault();
 
+    if (cargando) return;
+
     const validaciones = validarFormulario();
     setErrores(validaciones);
     setMensaje("");
@@ -81,27 +93,27 @@ function Registro({ setPagina }) {
     setCargando(true);
 
     try {
-      // Generamos el username sacando lo que está antes del @ del correo
-      const usernameGenerado = formulario.correo
+      const correoLimpio = formulario.correo.trim().toLowerCase();
+
+      const usernameGenerado = correoLimpio
         .split("@")[0]
         .replace(/[^a-zA-Z0-9]/g, "");
 
       const datosParaEnviar = {
         username: usernameGenerado,
-        email: formulario.correo,
+        email: correoLimpio,
         password: formulario.password,
-        nombreCompleto: formulario.nombrecompleto,
+        nombreCompleto: formulario.nombrecompleto.trim(),
         rol: formulario.rol,
       };
 
       const respuesta = await registrarUsuario(datosParaEnviar);
+
       console.log("Servidor respondió:", respuesta);
 
-      // Limpiamos los errores visuales y ponemos el mensaje de éxito
       setErrores({});
       setMensaje("Registro completado, redirigiendo a inicio de sesión...");
 
-      // Limpiamos el formulario
       setFormulario({
         nombrecompleto: "",
         correo: "",
@@ -110,7 +122,6 @@ function Registro({ setPagina }) {
         rol: "USER",
       });
 
-      // Redirigimos al login después de 2 segundos para que el usuario alcance a leer el mensaje
       setTimeout(() => {
         setPagina("login");
 
@@ -119,20 +130,34 @@ function Registro({ setPagina }) {
           behavior: "smooth",
         });
       }, 2000);
-
     } catch (error) {
       console.error("Error en el registro:", error);
-      
-      let mensajeAmigable = "No se pudo crear la cuenta. Revisa tu conexión.";
 
-      if (error.message && (error.message.includes("500") || error.message.includes("Internal Server Error"))) {
-        mensajeAmigable = "Este correo ya está registrado en el sistema. ¡Intenta con otro o inicia sesión!";
+      let mensajeAmigable = "No se pudo crear la cuenta. Intenta nuevamente.";
+
+      const mensajeError = error.message ? error.message.toLowerCase() : "";
+
+      if (
+        error.status === 409 ||
+        mensajeError.includes("registrado") ||
+        mensajeError.includes("duplicado") ||
+        mensajeError.includes("duplicate") ||
+        mensajeError.includes("already")
+      ) {
+        mensajeAmigable =
+          "Este correo ya está registrado en el sistema. ¡Intenta con otro o inicia sesión!";
+      } else if (
+        error.status === 500 ||
+        mensajeError.includes("500") ||
+        mensajeError.includes("internal server error")
+      ) {
+        mensajeAmigable =
+          "El servidor respondió con un error interno. Si la cuenta se creó igual, intenta iniciar sesión con los datos ingresados.";
       } else if (error.message) {
         mensajeAmigable = error.message;
       }
 
       setErrores({ global: mensajeAmigable });
-    } finally {
       setCargando(false);
     }
   }
@@ -259,7 +284,9 @@ function Registro({ setPagina }) {
           />
 
           {errores.confirmarPassword && (
-            <small className="text-danger">{errores.confirmarPassword}</small>
+            <small className="text-danger">
+              {errores.confirmarPassword}
+            </small>
           )}
         </div>
 
@@ -270,12 +297,15 @@ function Registro({ setPagina }) {
         )}
 
         {errores.global && (
-          <div className="alert alert-danger p-2 mb-3">{errores.global}</div>
+          <div className="alert alert-danger p-2 mb-3">
+            {errores.global}
+          </div>
         )}
 
-        {/* AQUÍ ESTÁ EL MENSAJE DE ÉXITO */}
         {mensaje && (
-          <div className="alert alert-success p-2 mb-3 text-center fw-bold">{mensaje}</div>
+          <div className="alert alert-success p-2 mb-3 text-center fw-bold">
+            {mensaje}
+          </div>
         )}
 
         <button

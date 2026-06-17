@@ -5,6 +5,37 @@ const API_GEO = "http://localhost:8084/api/geo";
 const ADOPCION_API_URL = "http://localhost:8086/api/adopcion";
 
 // =======================
+// FUNCIONES AUXILIARES
+// =======================
+
+function convertirTextoAJson(texto) {
+  if (!texto) return null;
+
+  try {
+    return JSON.parse(texto);
+  } catch {
+    return texto;
+  }
+}
+
+async function verificarRegistroConLogin(username, password) {
+  try {
+    const respuesta = await fetch(`${API_LOGIN}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    return respuesta.ok;
+  } catch (error) {
+    console.error("No se pudo verificar el registro con login:", error);
+    return false;
+  }
+}
+
+// =======================
 // MASCOTAS / REPORTES
 // =======================
 
@@ -59,7 +90,7 @@ export async function crearReporte(reporte, tipo) {
     );
   }
 
-  return texto ? JSON.parse(texto) : null;
+  return convertirTextoAJson(texto);
 }
 
 // =======================
@@ -88,7 +119,7 @@ export async function registrarUbicacion(ubicacion) {
     );
   }
 
-  return texto ? JSON.parse(texto) : null;
+  return convertirTextoAJson(texto);
 }
 
 export async function listarUbicaciones() {
@@ -114,13 +145,16 @@ export async function login(username, password) {
     body: JSON.stringify({ username, password }),
   });
 
+  const texto = await respuesta.text();
+
+  console.log("Respuesta login status:", respuesta.status);
+  console.log("Respuesta login texto:", texto);
+
   if (!respuesta.ok) {
     throw new Error("Error al iniciar sesión");
   }
 
-  const data = await respuesta.json();
-
-  return data;
+  return convertirTextoAJson(texto);
 }
 
 // =======================
@@ -143,6 +177,8 @@ export async function registrarUsuario(usuarioData) {
     rol: usuarioData.rol || "USER",
   };
 
+  console.log("Enviando usuario a MS_USUARIOS:", body);
+
   const respuesta = await fetch(`${API_USUARIOS}/registrar`, {
     method: "POST",
     headers: {
@@ -151,12 +187,68 @@ export async function registrarUsuario(usuarioData) {
     body: JSON.stringify(body),
   });
 
+  const texto = await respuesta.text();
+
+  console.log("Respuesta registrarUsuario status:", respuesta.status);
+  console.log("Respuesta registrarUsuario texto:", texto);
+
   if (!respuesta.ok) {
-    const texto = await respuesta.text();
-    throw new Error(texto || "Error al registrar usuario");
+    /*
+      Parche importante:
+      Si el backend responde 500, pero el usuario igual quedó creado,
+      verificamos intentando iniciar sesión con los mismos datos.
+      Si el login funciona, tratamos el registro como exitoso.
+    */
+    if (respuesta.status === 500) {
+      const usuarioFueCreado = await verificarRegistroConLogin(
+        body.username,
+        body.password
+      );
+
+      if (usuarioFueCreado) {
+        console.warn(
+          "El backend respondió 500, pero el usuario sí fue creado correctamente."
+        );
+
+        return {
+          mensaje: "Usuario registrado correctamente",
+          usuarioCreado: true,
+          username: body.username,
+          email: body.email,
+          rol: body.rol,
+        };
+      }
+    }
+
+    const error = new Error(
+      texto || `Error al registrar usuario. Status: ${respuesta.status}`
+    );
+
+    error.status = respuesta.status;
+    error.respuesta = texto;
+
+    throw error;
   }
 
-  return await respuesta.json();
+  const data = convertirTextoAJson(texto);
+
+  if (typeof data === "string") {
+    return {
+      mensaje: data || "Usuario registrado correctamente",
+      usuarioCreado: true,
+      username: body.username,
+      email: body.email,
+      rol: body.rol,
+    };
+  }
+
+  return data || {
+    mensaje: "Usuario registrado correctamente",
+    usuarioCreado: true,
+    username: body.username,
+    email: body.email,
+    rol: body.rol,
+  };
 }
 
 export function obtenerUsuarioActual() {
@@ -204,7 +296,7 @@ export async function obtenerMisMascotas() {
     return [];
   }
 
-  return texto ? JSON.parse(texto) : [];
+  return convertirTextoAJson(texto) || [];
 }
 
 export async function agregarMiMascota(mascota) {
@@ -246,7 +338,7 @@ export async function agregarMiMascota(mascota) {
     );
   }
 
-  return texto ? JSON.parse(texto) : null;
+  return convertirTextoAJson(texto);
 }
 
 export async function eliminarMiMascota(id) {
@@ -280,11 +372,16 @@ export async function registrarMascotaAdopcion(datosMascota) {
     body: JSON.stringify(datosMascota),
   });
 
+  const texto = await respuesta.text();
+
+  console.log("Respuesta registrarMascotaAdopcion status:", respuesta.status);
+  console.log("Respuesta registrarMascotaAdopcion texto:", texto);
+
   if (!respuesta.ok) {
     throw new Error("No se pudo registrar la mascota en adopción.");
   }
 
-  return await respuesta.json();
+  return convertirTextoAJson(texto);
 }
 
 export async function listarMascotasAdopcion() {
@@ -310,9 +407,14 @@ export async function marcarMascotaAdoptada(id) {
     method: "PUT",
   });
 
+  const texto = await respuesta.text();
+
+  console.log("Respuesta marcarMascotaAdoptada status:", respuesta.status);
+  console.log("Respuesta marcarMascotaAdoptada texto:", texto);
+
   if (!respuesta.ok) {
     throw new Error("No se pudo marcar la mascota como adoptada.");
   }
 
-  return await respuesta.json();
+  return convertirTextoAJson(texto);
 }
