@@ -160,12 +160,12 @@ function Registro({ setPagina }) {
             <button
               type="button"
               className={`btn-tipo-cuenta ${
-                formulario.rol === "VETERINARIA" ? "activo" : ""
+                formulario.rol === "VETERINARIO" ? "activo" : ""
               }`}
-              onClick={() => seleccionarRol("VETERINARIA")}
+              onClick={() => seleccionarRol("VETERINARIO")}
               disabled={cargando}
             >
-              Veterinaria
+              Veterinario
             </button>
           </div>
 
@@ -176,7 +176,7 @@ function Registro({ setPagina }) {
 
         <div className="mb-3">
           <label className="form-label">
-            {formulario.rol === "VETERINARIA"
+            {formulario.rol === "VETERINARIO"
               ? "Nombre de la veterinaria"
               : "Nombre completo"}
           </label>
@@ -189,7 +189,7 @@ function Registro({ setPagina }) {
             onChange={manejarCambio}
             disabled={cargando}
             placeholder={
-              formulario.rol === "VETERINARIA"
+              formulario.rol === "VETERINARIO"
                 ? "Ej: Veterinaria San José"
                 : "Ej: Nombre Apellido"
             }
