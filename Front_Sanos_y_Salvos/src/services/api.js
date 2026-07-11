@@ -1,8 +1,27 @@
-const API_BFF = "http://localhost:8085/api/bff";
-const API_LOGIN = "http://localhost:8082/api/auth";
-const API_USUARIOS = "http://localhost:8083/api/usuarios";
-const API_GEO = "http://localhost:8084/api/geo";
-const ADOPCION_API_URL = "http://localhost:8086/api/adopcion";
+const API_BFF = (
+  import.meta.env.VITE_API_BFF ||
+  "http://localhost:8085/api/bff"
+).replace(/\/+$/, "");
+
+const API_LOGIN = (
+  import.meta.env.VITE_API_LOGIN ||
+  "http://localhost:8082/api/auth"
+).replace(/\/+$/, "");
+
+const API_USUARIOS = (
+  import.meta.env.VITE_API_USUARIOS ||
+  "http://localhost:8083/api/usuarios"
+).replace(/\/+$/, "");
+
+const API_GEO = (
+  import.meta.env.VITE_API_GEO ||
+  "http://localhost:8084/api/geo"
+).replace(/\/+$/, "");
+
+const ADOPCION_API_URL = (
+  import.meta.env.VITE_API_ADOPCION ||
+  "http://localhost:8086/api/adopcion"
+).replace(/\/+$/, "");
 
 // =======================
 // FUNCIONES AUXILIARES

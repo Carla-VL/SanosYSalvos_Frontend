@@ -38,9 +38,11 @@ function Perfil({ setPagina }) {
   const [cargandoAdopcion, setCargandoAdopcion] = useState(false);
   const [cargandoListadoVet, setCargandoListadoVet] = useState(false);
 
-  const DASHBOARD_ADMIN_URL = "http://localhost:3000/index.html";
-
-  useEffect(() => {
+  const DASHBOARD_ADMIN_URL =
+    import.meta.env.VITE_DASHBOARD_ADMIN_URL ||
+    "http://localhost:3000/index.html";
+    useEffect(() => {
+      
     const usuarioGuardado = obtenerUsuarioActual();
     
     // Validamos qué rol tiene realmente
