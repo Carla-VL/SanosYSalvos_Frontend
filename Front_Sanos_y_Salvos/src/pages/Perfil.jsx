@@ -40,7 +40,7 @@ function Perfil({ setPagina }) {
 
   const DASHBOARD_ADMIN_URL =
     import.meta.env.VITE_DASHBOARD_ADMIN_URL ||
-    "http://localhost:3000/index.html";
+    "https://sanosysalvos-admin-dashboard.netlify.app";
     useEffect(() => {
       
     const usuarioGuardado = obtenerUsuarioActual();
