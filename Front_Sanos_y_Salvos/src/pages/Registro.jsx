@@ -189,7 +189,7 @@ function Registro({ setPagina }) {
               onClick={() => seleccionarRol("USER")}
               disabled={cargando}
             >
-              Usuario normal
+              Usuario
             </button>
 
             <button
