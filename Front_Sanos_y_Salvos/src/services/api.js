@@ -19,7 +19,7 @@ function convertirTextoAJson(texto) {
 
 async function verificarRegistroConLogin(username, password) {
   try {
-    const respuesta = await fetch(`${API_BFF}/login`, {
+    const respuesta = await fetch(`${API_BFF}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -137,7 +137,7 @@ export async function listarUbicaciones() {
 // =======================
 
 export async function login(username, password) {
-  const respuesta = await fetch(`${API_BFF}/login`, {
+  const respuesta = await fetch(`${API_BFF}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -179,7 +179,7 @@ export async function registrarUsuario(usuarioData) {
 
   console.log("Enviando usuario a MS_USUARIOS:", body);
 
-  const respuesta = await fetch(`${API_BFF}/registrar`, {
+  const respuesta = await fetch(`${API_BFF}/auth/registrar`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
