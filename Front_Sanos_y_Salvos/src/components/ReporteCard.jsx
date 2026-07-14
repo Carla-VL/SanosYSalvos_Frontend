@@ -1,49 +1,103 @@
-function ReporteCard({ reporte }) {
-  if (!reporte) return null;
+const IMAGEN_POR_DEFECTO =
+  "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=500";
 
-  const claseBadge = reporte.tipoReporte === "ENCONTRADA" ? "bg-success" : 
-                     reporte.tipoReporte === "PERDIDA" ? "bg-warning text-dark" : "bg-secondary";
-                     
-  const textStatusClass = reporte.tipoReporte === "ENCONTRADA" ? "text-success fw-bold" : 
-                          reporte.tipoReporte === "PERDIDA" ? "text-danger fw-bold" : "text-muted";
+function ReporteCard({ reporte }) {
+  if (!reporte) {
+    return null;
+  }
+
+  const claseBadge =
+    reporte.tipoReporte === "ENCONTRADA"
+      ? "bg-success"
+      : reporte.tipoReporte === "PERDIDA"
+        ? "bg-warning text-dark"
+        : "bg-secondary";
+
+  const textStatusClass =
+    reporte.tipoReporte === "ENCONTRADA"
+      ? "text-success fw-bold"
+      : reporte.tipoReporte === "PERDIDA"
+        ? "text-danger fw-bold"
+        : "text-muted";
+
+  const imagenReporte =
+    reporte.fotoMascota ||
+    reporte.foto ||
+    reporte.imagenUrl ||
+    reporte.imagen ||
+    IMAGEN_POR_DEFECTO;
+
+  function manejarErrorImagen(evento) {
+    evento.currentTarget.onerror = null;
+    evento.currentTarget.src = IMAGEN_POR_DEFECTO;
+  }
 
   return (
     <div className="card h-100 shadow-sm border-0 card-reporte">
+      <img
+        src={imagenReporte}
+        className="card-img-top card-img-mascota"
+        alt={`Fotografía de ${reporte.nombreMascota}`}
+        onError={manejarErrorImagen}
+        style={{
+          height: "200px",
+          objectFit: "cover",
+        }}
+      />
+
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5 className="card-title fw-bold text-success mb-0">{reporte.nombreMascota}</h5>
-          <span className={`badge ${claseBadge}`}>{reporte.tipoReporte}</span>
+          <h5 className="card-title fw-bold text-success mb-0">
+            {reporte.nombreMascota}
+          </h5>
+
+          <span className={`badge ${claseBadge}`}>
+            {reporte.tipoReporte}
+          </span>
         </div>
 
         <div className="card-text text-muted small">
           <p className="mb-1">
-            <strong>Tipo:</strong> <span className="text-dark">{reporte.tipoMascota}</span>
+            <strong>Tipo:</strong>{" "}
+            <span className="text-dark">{reporte.tipoMascota}</span>
           </p>
+
           <p className="mb-1">
-            <strong>Raza:</strong> <span className="text-dark">{reporte.razaMascota}</span>
+            <strong>Raza:</strong>{" "}
+            <span className="text-dark">{reporte.razaMascota}</span>
           </p>
+
           <p className="mb-1">
-            <strong>Edad:</strong> <span className="text-dark">{reporte.edadMascota}</span>
+            <strong>Edad:</strong>{" "}
+            <span className="text-dark">{reporte.edadMascota}</span>
           </p>
-          
-          {}
+
           <p className="mb-1">
-            <strong>Reproductivo:</strong> <span className="text-dark">{reporte.reproductivoMascota}</span>
+            <strong>Reproductivo:</strong>{" "}
+            <span className="text-dark">
+              {reporte.reproductivoMascota}
+            </span>
           </p>
-          
-          {}
+
           <p className="mb-1">
-            <strong>Vacunas:</strong> <span className="text-dark">{reporte.vacunasMascota}</span>
+            <strong>Vacunas:</strong>{" "}
+            <span className="text-dark">{reporte.vacunasMascota}</span>
           </p>
-          
+
           <p className="mb-0 mt-2">
-            <strong>Estado Reporte:</strong> <span className={textStatusClass}>{reporte.descripcion}</span>
+            <strong>Estado del reporte:</strong>{" "}
+            <span className={textStatusClass}>
+              {reporte.descripcion}
+            </span>
           </p>
         </div>
 
         <div className="mt-3 pt-3 border-top d-flex justify-content-between align-items-center">
-          <span className="text-muted small">ID Registro:</span>
-          <span className="badge bg-light text-dark">#{reporte.id}</span>
+          <span className="text-muted small">ID del registro:</span>
+
+          <span className="badge bg-light text-dark">
+            #{reporte.id}
+          </span>
         </div>
       </div>
     </div>

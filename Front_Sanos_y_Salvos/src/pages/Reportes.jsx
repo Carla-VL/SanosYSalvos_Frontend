@@ -46,15 +46,22 @@ function Reportes() {
           }
 
           return {
-            id: idNum,
-            nombreMascota: item.nombre || "Sin Nombre",
-            tipoMascota: item.especie || "No especificada",
-            razaMascota: item.raza || "Mestizo", 
-            edadMascota: item.edad ? `${item.edad} años` : "No registra",
-            tipoReporte: statusFinal, 
-            descripcion: descFinal, 
-            vacunasMascota: estadoVacunas,           
-            reproductivoMascota: estadoReproductivo  
+              id: idNum,
+              nombreMascota: item.nombre || "Sin Nombre",
+              tipoMascota: item.especie || "No especificada",
+              razaMascota: item.raza || "Mestizo",
+              edadMascota: item.edad ? `${item.edad} años` : "No registra",
+
+              fotoMascota:
+                item.foto ||
+                item.imagenUrl ||
+                item.imagen ||
+                "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=500",
+
+              tipoReporte: statusFinal,
+              descripcion: descFinal,
+              vacunasMascota: estadoVacunas,
+              reproductivoMascota: estadoReproductivo,
           };
         });
 
