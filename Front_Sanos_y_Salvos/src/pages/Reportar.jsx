@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { crearReporte, registrarUbicacion, obtenerMascotas } from "../services/api";
+import {
+  crearReporte,
+  registrarUbicacion,
+  obtenerMascotas,
+  analizarImagenMascota,
+} from "../services/api";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -9,6 +14,10 @@ function Reportar() {
   const [busquedaRealizada, setBusquedaRealizada] = useState(false);
   const [direccionElegida, setDireccionElegida] = useState(false);
   const [sessionToken] = useState(() => crypto.randomUUID());
+  const [archivoFoto, setArchivoFoto] = useState(null);
+  const [analizandoFoto, setAnalizandoFoto] = useState(false);
+  const [mensajeIA, setMensajeIA] = useState("");
+  const [errorIA, setErrorIA] = useState("");
 
   const [formulario, setFormulario] = useState({
     microchip: "",
@@ -166,15 +175,39 @@ function Reportar() {
   }
 
   function manejarFoto(evento) {
-  const archivo = evento.target.files[0];
+  const archivo = evento.target.files?.[0];
+
+  setMensajeIA("");
+  setErrorIA("");
 
   if (!archivo) {
+    setArchivoFoto(null);
+
     setFormulario((prev) => ({
       ...prev,
       foto: "",
     }));
+
     return;
   }
+
+  if (!archivo.type.startsWith("image/")) {
+    setArchivoFoto(null);
+    setErrorIA("Debes seleccionar un archivo de imagen.");
+    evento.target.value = "";
+    return;
+  }
+
+  const limiteBytes = 5 * 1024 * 1024;
+
+  if (archivo.size > limiteBytes) {
+    setArchivoFoto(null);
+    setErrorIA("La fotografía no puede superar los 5 MB.");
+    evento.target.value = "";
+    return;
+  }
+
+  setArchivoFoto(archivo);
 
   const reader = new FileReader();
 
@@ -185,8 +218,51 @@ function Reportar() {
     }));
   };
 
+  reader.onerror = () => {
+    setArchivoFoto(null);
+    setErrorIA("No se pudo leer la fotografía seleccionada.");
+  };
+
   reader.readAsDataURL(archivo);
-}
+  }
+
+  async function manejarAnalisisIA() {
+    if (!archivoFoto) {
+      setErrorIA("Primero debes seleccionar una fotografía.");
+      return;
+    }
+
+    try {
+      setAnalizandoFoto(true);
+      setMensajeIA("");
+      setErrorIA("");
+
+      const resultado = await analizarImagenMascota(archivoFoto);
+
+      const descripcionLimpia = resultado
+        .replace("La IA detectó las siguientes características:", "")
+        .replace("Características detectadas:", "")
+        .trim();
+
+      setFormulario((prev) => ({
+        ...prev,
+        caracteristicasEspeciales: descripcionLimpia,
+      }));
+
+      setMensajeIA(
+        "Descripción generada correctamente. Puedes revisarla y modificarla antes de guardar."
+      );
+    } catch (error) {
+      console.error("Error al analizar la fotografía:", error);
+
+      setErrorIA(
+        error.message || "No fue posible analizar la fotografía."
+      );
+    } finally {
+      setAnalizandoFoto(false);
+    }
+  }
+
 
   function validarFormulario() {
     const nuevosErrores = {};
@@ -385,11 +461,15 @@ function Reportar() {
         comuna: "",
         tipoReporte: "PERDIDA",
         contacto: "",
+        foto: "",
       });
 
       setSugerenciasDireccion([]);
       setBusquedaRealizada(false);
       setDireccionElegida(false);
+      setArchivoFoto(null);
+      setMensajeIA("");
+      setErrorIA("");
     } catch (error) {
       console.error("ERROR REAL AL GUARDAR:", error);
       console.error("Mensaje del error:", error.message);
@@ -591,24 +671,6 @@ function Reportar() {
             )}
           </div>
 
-          <div className="col-12 mb-3">
-            <label className="form-label">
-              Características físicas detalladas
-            </label>
-            <textarea
-              className="form-control"
-              name="caracteristicasEspeciales"
-              value={formulario.caracteristicasEspeciales}
-              onChange={manejarCambio}
-              rows="4"
-              placeholder="Detalles únicos..."
-            />
-            {errores.caracteristicasEspeciales && (
-              <small className="text-danger">
-                {errores.caracteristicasEspeciales}
-              </small>
-            )}
-          </div>
 
 
           <div className="col-md-6 mb-3 position-relative">
@@ -697,7 +759,7 @@ function Reportar() {
           <input
             className="form-control"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             onChange={manejarFoto}
           />
 
@@ -710,18 +772,63 @@ function Reportar() {
               />
             </div>
           )}
+
+          {errorIA && (
+            <small className="text-danger d-block mt-2">
+              {errorIA}
+            </small>
+          )}
         </div>
 
-        <button className="btn btn-success" type="submit">
+        <div className="col-md-12 mb-3">
+          <button
+            className="btn btn-outline-success w-100"
+            type="button"
+            onClick={manejarAnalisisIA}
+            disabled={!archivoFoto || analizandoFoto}
+          >
+            {analizandoFoto
+              ? "Analizando fotografía..."
+              : "✨ Analizar foto con IA"}
+          </button>
+
+          <small className="text-muted d-block mt-2">
+            La IA generará una descripción orientativa que podrás editar antes de
+            guardar el reporte.
+          </small>
+
+          {mensajeIA && (
+            <div className="alert alert-success mt-2 mb-0">
+              {mensajeIA}
+            </div>
+          )}
+        </div>
+
+        <div className="col-md-12 mb-3">
+          <label className="form-label">
+            Características físicas detalladas
+          </label>
+
+          <textarea
+            className="form-control"
+            name="caracteristicasEspeciales"
+            value={formulario.caracteristicasEspeciales}
+            onChange={manejarCambio}
+            rows="4"
+            placeholder="Describe el pelaje, manchas, cicatrices, collar u otras características. También puedes generar esta descripción usando la IA."
+          />
+
+          {errores.caracteristicasEspeciales && (
+            <small className="text-danger">
+              {errores.caracteristicasEspeciales}
+            </small>
+          )}
+        </div>
+
+        <button className="btn btn-success w-100" type="submit">
           Guardar reporte
         </button>
       </form>
-
-      {mensaje && (
-        <div className="alert alert-success mt-3 formulario-reporte">
-          {mensaje}
-        </div>
-      )}
     </section>
   );
 }

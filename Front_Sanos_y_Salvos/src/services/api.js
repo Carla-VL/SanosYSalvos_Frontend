@@ -1,3 +1,8 @@
+const API_IA = (
+  import.meta.env.VITE_API_IA || "http://localhost:9000/api/ia"
+).replace(/\/+$/, "");
+
+
 const API_BFF = (
   import.meta.env.VITE_API_BFF ||
   "http://localhost:8085/api/bff"
@@ -436,4 +441,35 @@ export async function marcarMascotaAdoptada(id) {
   }
 
   return convertirTextoAJson(texto);
+}
+
+// =======================
+// INTELIGENCIA ARTIFICIAL
+// =======================
+
+export async function analizarImagenMascota(archivoImagen) {
+  if (!archivoImagen) {
+    throw new Error("Debes seleccionar una fotografía.");
+  }
+
+  const formData = new FormData();
+  formData.append("imagen", archivoImagen);
+
+  const respuesta = await fetch(`${API_IA}/analizar`, {
+    method: "POST",
+    body: formData,
+  });
+
+  const texto = await respuesta.text();
+
+  console.log("Respuesta IA status:", respuesta.status);
+  console.log("Respuesta IA texto:", texto);
+
+  if (!respuesta.ok) {
+    throw new Error(
+      texto || "No se pudo analizar la fotografía de la mascota."
+    );
+  }
+
+  return texto;
 }
