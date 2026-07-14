@@ -10,6 +10,8 @@ import {
   marcarMascotaAdoptada,
 } from "../services/api";
 
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+
 function Perfil({ setPagina }) {
   const [usuario, setUsuario] = useState(null);
   const [mascotas, setMascotas] = useState([]);
@@ -36,6 +38,15 @@ function Perfil({ setPagina }) {
 
   const [mensajeAdopcion, setMensajeAdopcion] = useState("");
   const [cargandoAdopcion, setCargandoAdopcion] = useState(false);
+  const [sugerenciasAdopcion, setSugerenciasAdopcion] = useState([]);
+  const [cargandoDireccionesAdopcion, setCargandoDireccionesAdopcion] =
+    useState(false);
+  const [busquedaDireccionRealizada, setBusquedaDireccionRealizada] =
+    useState(false);
+  const [direccionAdopcionElegida, setDireccionAdopcionElegida] =
+    useState(false);
+
+  const [sessionTokenAdopcion] = useState(() => crypto.randomUUID());
   const [cargandoListadoVet, setCargandoListadoVet] = useState(false);
 
   const DASHBOARD_ADMIN_URL =
@@ -67,6 +78,36 @@ function Perfil({ setPagina }) {
     }
   }, []);
 
+    useEffect(() => {
+    const texto = formularioAdopcion.ubicacion.trim();
+
+    if (direccionAdopcionElegida) {
+      return;
+    }
+
+    if (texto.length < 3) {
+      setSugerenciasAdopcion([]);
+      setBusquedaDireccionRealizada(false);
+      return;
+    }
+
+    if (!MAPBOX_TOKEN) {
+      console.error(
+        "Falta configurar VITE_MAPBOX_TOKEN en el archivo .env"
+      );
+      setSugerenciasAdopcion([]);
+      return;
+    }
+
+    const temporizador = setTimeout(() => {
+      buscarDireccionesAdopcion(texto);
+    }, 500);
+
+    return () => clearTimeout(temporizador);
+  }, [formularioAdopcion.ubicacion, direccionAdopcionElegida]);
+
+
+
   async function cargarMascotas() {
     const datos = await obtenerMisMascotas();
     setMascotas(datos);
@@ -94,11 +135,115 @@ function Perfil({ setPagina }) {
     });
   }
 
+    async function buscarDireccionesAdopcion(texto) {
+    try {
+      setCargandoDireccionesAdopcion(true);
+      setBusquedaDireccionRealizada(false);
+
+      const url =
+        `https://api.mapbox.com/search/searchbox/v1/suggest` +
+        `?q=${encodeURIComponent(texto)}` +
+        `&access_token=${MAPBOX_TOKEN}` +
+        `&session_token=${sessionTokenAdopcion}` +
+        `&country=CL` +
+        `&language=es` +
+        `&limit=6` +
+        `&types=address,street`;
+
+      const respuesta = await fetch(url);
+
+      if (!respuesta.ok) {
+        throw new Error("No se pudieron buscar direcciones.");
+      }
+
+      const datos = await respuesta.json();
+
+      setSugerenciasAdopcion(datos.suggestions || []);
+      setBusquedaDireccionRealizada(true);
+    } catch (error) {
+      console.error(
+        "Error buscando direcciones para adopción:",
+        error
+      );
+
+      setSugerenciasAdopcion([]);
+      setBusquedaDireccionRealizada(true);
+    } finally {
+      setCargandoDireccionesAdopcion(false);
+    }
+  }
+
+  async function seleccionarDireccionAdopcion(direccion) {
+    try {
+      if (!direccion?.mapbox_id) {
+        return;
+      }
+
+      const url =
+        `https://api.mapbox.com/search/searchbox/v1/retrieve/` +
+        `${direccion.mapbox_id}` +
+        `?access_token=${MAPBOX_TOKEN}` +
+        `&session_token=${sessionTokenAdopcion}`;
+
+      const respuesta = await fetch(url);
+
+      if (!respuesta.ok) {
+        throw new Error("No se pudo verificar la dirección.");
+      }
+
+      const datos = await respuesta.json();
+      const resultado = datos.features?.[0];
+
+      if (!resultado) {
+        throw new Error("Mapbox no devolvió una dirección válida.");
+      }
+
+      const direccionCompleta =
+        resultado.properties?.full_address ||
+        [
+          resultado.properties?.name,
+          resultado.properties?.place_formatted,
+        ]
+          .filter(Boolean)
+          .join(", ") ||
+        direccion.full_address ||
+        direccion.place_formatted ||
+        direccion.name;
+
+      setFormularioAdopcion((anterior) => ({
+        ...anterior,
+        ubicacion: direccionCompleta,
+      }));
+
+      setDireccionAdopcionElegida(true);
+      setSugerenciasAdopcion([]);
+      setBusquedaDireccionRealizada(false);
+    } catch (error) {
+      console.error(
+        "Error seleccionando dirección de adopción:",
+        error
+      );
+
+      alert("No se pudo verificar la dirección seleccionada.");
+    }
+  }
+
   function manejarCambioAdopcion(evento) {
-    setFormularioAdopcion({
-      ...formularioAdopcion,
-      [evento.target.name]: evento.target.value,
-    });
+    const { name, value } = evento.target;
+
+    if (name === "ubicacion") {
+      setDireccionAdopcionElegida(false);
+      setFormularioAdopcion((anterior) => ({
+        ...anterior,
+        ubicacion: value,
+      }));
+      return;
+    }
+
+    setFormularioAdopcion((anterior) => ({
+      ...anterior,
+      [name]: value,
+    }));
   }
 
   function manejarFotoAdopcion(evento) {
@@ -157,6 +302,18 @@ function Perfil({ setPagina }) {
       return;
     }
 
+    if (!formularioAdopcion.ubicacion.trim()) {
+      alert("Debes ingresar la ubicación de la mascota.");
+      return;
+    }
+
+    if (!direccionAdopcionElegida) {
+      alert(
+        "Debes seleccionar una calle válida desde las sugerencias."
+      );
+      return;
+    }
+
     const datosParaEnviar = {
       nombre: formularioAdopcion.nombre,
       especie: formularioAdopcion.especie,
@@ -186,6 +343,10 @@ function Perfil({ setPagina }) {
         descripcion: "",
         foto: "",
       });
+      
+      setDireccionAdopcionElegida(false);
+      setSugerenciasAdopcion([]);
+      setBusquedaDireccionRealizada(false);
 
       setMensajeAdopcion(
         "Mascota registrada correctamente en el apartado de adopción."
@@ -376,14 +537,68 @@ function Perfil({ setPagina }) {
               disabled={cargandoAdopcion}
             />
 
-            <input
-              type="text"
-              name="ubicacion"
-              placeholder="Ubicación"
-              value={formularioAdopcion.ubicacion}
-              onChange={manejarCambioAdopcion}
-              disabled={cargandoAdopcion}
-            />
+            <div className="campo-ubicacion-adopcion">
+              <input
+                type="text"
+                name="ubicacion"
+                className={
+                  direccionAdopcionElegida
+                    ? "input-ubicacion ubicacion-verificada"
+                    : "input-ubicacion"
+                }
+                placeholder="Escribe una calle y selecciona una sugerencia"
+                value={formularioAdopcion.ubicacion}
+                onChange={manejarCambioAdopcion}
+                disabled={cargandoAdopcion}
+                autoComplete="off"
+              />
+
+              {cargandoDireccionesAdopcion && (
+                <small className="mensaje-direccion mensaje-buscando">
+                  Buscando calles...
+                </small>
+              )}
+
+              {direccionAdopcionElegida && (
+                <small className="mensaje-direccion mensaje-verificado">
+                  Dirección verificada correctamente.
+                </small>
+              )}
+
+              {!cargandoDireccionesAdopcion &&
+                busquedaDireccionRealizada &&
+                formularioAdopcion.ubicacion.trim().length >= 3 &&
+                sugerenciasAdopcion.length === 0 &&
+                !direccionAdopcionElegida && (
+                  <small className="mensaje-direccion mensaje-error">
+                    No se encontraron calles para esta búsqueda.
+                  </small>
+                )}
+
+              {sugerenciasAdopcion.length > 0 && (
+                <div className="lista-sugerencias-adopcion">
+                  {sugerenciasAdopcion.map((direccion) => (
+                    <button
+                      key={direccion.mapbox_id}
+                      type="button"
+                      className="sugerencia-adopcion"
+                      onMouseDown={(evento) => {
+                        evento.preventDefault();
+                        seleccionarDireccionAdopcion(direccion);
+                      }}
+                    >
+                      <strong>{direccion.name || "Dirección"}</strong>
+
+                      <span>
+                        {direccion.full_address ||
+                          direccion.place_formatted ||
+                          "Dirección sugerida"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <input
               type="text"

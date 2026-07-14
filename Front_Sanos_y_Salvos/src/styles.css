@@ -1060,6 +1060,97 @@ button,
   }
 }
 
+/* Campo de ubicación del formulario de adopción */
+
+.campo-ubicacion-adopcion {
+  position: relative;
+  width: 100%;
+}
+
+.input-ubicacion {
+  width: 100%;
+}
+
+.ubicacion-verificada {
+  border-color: #198754;
+  outline-color: #198754;
+}
+
+.mensaje-direccion {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+.mensaje-buscando {
+  color: #666;
+}
+
+.mensaje-verificado {
+  color: #198754;
+}
+
+.mensaje-error {
+  color: #b42318;
+}
+
+/* Contenedor de sugerencias de Mapbox */
+
+.lista-sugerencias-adopcion {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 0;
+  right: 0;
+  z-index: 9999;
+
+  max-height: 220px;
+  overflow-y: auto;
+
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Cada dirección sugerida */
+
+.sugerencia-adopcion {
+  display: block;
+  width: 100%;
+  padding: 10px;
+
+  border: none;
+  border-bottom: 1px solid #eee;
+
+  background-color: #fff;
+  color: #222;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sugerencia-adopcion:last-child {
+  border-bottom: none;
+}
+
+.sugerencia-adopcion:hover {
+  background-color: #f3f7f4;
+}
+
+.sugerencia-adopcion strong {
+  display: block;
+}
+
+.sugerencia-adopcion span {
+  display: block;
+  margin-top: 3px;
+
+  color: #666;
+  font-size: 13px;
+}
+
+
+
+
 /* =========================
    DASHBOARD ADMIN
 ========================= */
