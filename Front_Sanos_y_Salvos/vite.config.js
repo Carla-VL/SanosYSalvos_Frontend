@@ -60,10 +60,14 @@ export default defineConfig({
         ],
       },
 
+      // Debe existir un solo bloque workbox
       workbox: {
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+
         globPatterns: [
           "**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}",
         ],
+
         cleanupOutdatedCaches: true,
       },
     }),
