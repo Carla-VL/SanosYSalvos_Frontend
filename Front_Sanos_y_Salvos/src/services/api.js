@@ -1,31 +1,6 @@
-const API_IA = (
-  import.meta.env.VITE_API_IA || "http://localhost:9000/api/ia"
-).replace(/\/+$/, "");
-
-
 const API_BFF = (
   import.meta.env.VITE_API_BFF ||
   "http://localhost:8085/api/bff"
-).replace(/\/+$/, "");
-
-const API_LOGIN = (
-  import.meta.env.VITE_API_LOGIN ||
-  "http://localhost:8082/api/auth"
-).replace(/\/+$/, "");
-
-const API_USUARIOS = (
-  import.meta.env.VITE_API_USUARIOS ||
-  "http://localhost:8083/api/usuarios"
-).replace(/\/+$/, "");
-
-const API_GEO = (
-  import.meta.env.VITE_API_GEO ||
-  "http://localhost:8084/api/geo"
-).replace(/\/+$/, "");
-
-const ADOPCION_API_URL = (
-  import.meta.env.VITE_API_ADOPCION ||
-  "http://localhost:8086/api/adopcion"
 ).replace(/\/+$/, "");
 
 // =======================
@@ -44,7 +19,7 @@ function convertirTextoAJson(texto) {
 
 async function verificarRegistroConLogin(username, password) {
   try {
-    const respuesta = await fetch(`${API_LOGIN}/login`, {
+    const respuesta = await fetch(`${API_BFF}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -86,20 +61,21 @@ export async function obtenerReportes() {
 export async function crearReporte(reporte, tipo) {
   const token = localStorage.getItem("token");
 
-  if (!token) {
-    throw new Error("Debes iniciar sesión para registrar una mascota.");
-  }
-
   const url = tipo
     ? `${API_BFF}/mascotas/reportar?tipo=${tipo}`
     : `${API_BFF}/mascotas/reportar`;
 
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers.Authorization = "Bearer " + token;
+  }
+
   const respuesta = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + token,
-    },
+    headers,
     body: JSON.stringify(reporte),
   });
 
@@ -124,7 +100,7 @@ export async function crearReporte(reporte, tipo) {
 export async function registrarUbicacion(ubicacion) {
   console.log("Enviando ubicación a GEO:", ubicacion);
 
-  const respuesta = await fetch(`${API_GEO}/registrar`, {
+  const respuesta = await fetch(`${API_BFF}/registrar`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -147,7 +123,7 @@ export async function registrarUbicacion(ubicacion) {
 }
 
 export async function listarUbicaciones() {
-  const respuesta = await fetch(`${API_GEO}/listar`);
+  const respuesta = await fetch(`${API_BFF}/listar`);
 
   if (!respuesta.ok) {
     throw new Error("Error al listar ubicaciones");
@@ -161,7 +137,7 @@ export async function listarUbicaciones() {
 // =======================
 
 export async function login(username, password) {
-  const respuesta = await fetch(`${API_LOGIN}/login`, {
+  const respuesta = await fetch(`${API_BFF}/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -203,7 +179,7 @@ export async function registrarUsuario(usuarioData) {
 
   console.log("Enviando usuario a MS_USUARIOS:", body);
 
-  const respuesta = await fetch(`${API_USUARIOS}/registrar`, {
+  const respuesta = await fetch(`${API_BFF}/registrar`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -378,7 +354,7 @@ export async function eliminarMiMascota(id) {
 // =======================
 
 export async function obtenerMascotasAdopcion() {
-  const respuesta = await fetch(`${ADOPCION_API_URL}/catalogo`);
+  const respuesta = await fetch(`${API_BFF}/catalogo`);
 
   if (!respuesta.ok) {
     throw new Error("No se pudieron cargar las mascotas en adopción.");
@@ -388,7 +364,7 @@ export async function obtenerMascotasAdopcion() {
 }
 
 export async function registrarMascotaAdopcion(datosMascota) {
-  const respuesta = await fetch(`${ADOPCION_API_URL}/registrar`, {
+  const respuesta = await fetch(`${API_BFF}/registrar`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -416,7 +392,7 @@ export async function obtenerMascotasAdopcionVeterinaria(contacto) {
   const contactoCodificado = encodeURIComponent(contacto);
 
   const respuesta = await fetch(
-    `${ADOPCION_API_URL}/veterinaria/${contactoCodificado}`
+    `${API_BFF}/adopcion/veterinaria/${contactoCodificado}`
   );
 
   if (!respuesta.ok) {
@@ -427,7 +403,7 @@ export async function obtenerMascotasAdopcionVeterinaria(contacto) {
 }
 
 export async function marcarMascotaAdoptada(id) {
-  const respuesta = await fetch(`${ADOPCION_API_URL}/${id}/adoptada`, {
+  const respuesta = await fetch(`${API_BFF}/${id}/adoptada`, {
     method: "PUT",
   });
 
@@ -455,7 +431,7 @@ export async function analizarImagenMascota(archivoImagen) {
   const formData = new FormData();
   formData.append("imagen", archivoImagen);
 
-  const respuesta = await fetch(`${API_IA}/analizar`, {
+  const respuesta = await fetch(`${API_BFF}/ia/analizar`, {
     method: "POST",
     body: formData,
   });
